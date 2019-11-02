@@ -1,0 +1,16 @@
+[package]
+authors = ["Hiromitsu Oshiba <0x75960@chocola.tech>"]
+edition = "2018"
+name = "iocutil"
+version = "0.1.0"
+
+[dependencies]
+failure = "0.1.6"
+
+[dependencies.festum]
+git = "https://github.com/0x75960/festum.rs"
+version = "0.1.0"
+
+[dependencies.midy]
+git = "https://github.com/0x75960/midy.rs"
+version = "0.1.0"
