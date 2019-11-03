@@ -83,6 +83,83 @@ impl VirusTotalClient {
         let report: RawFileReport = self.internal_query(resource, false)?;
         Ok(report.try_into()?)
     }
+
+    /// batch query file report
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    /// use serde::Deserialize;
+    ///
+    /// #[derive(Deserialize)]
+    /// struct FieldsWhatYouNeed {
+    ///     response_code: i32,
+    ///     // fields you want to retrieve
+    /// }
+    ///
+    /// let vtclient = VirusTotalClient::default();
+    /// let hashes = &["d41d8cd98f00b204e9800998ecf8427e"];
+    /// let items: Vec<Result<FieldsWhatYouNeed, failure::Error>> = vtclient.batch_query_allinfo(hashes);
+    /// for item in items {
+    ///     item.expect("failed to retrieve");
+    /// }
+    /// ```
+    pub fn batch_query_allinfo<T>(
+        &self,
+        resources: impl IntoIterator<Item = impl AsRef<str>>,
+    ) -> Vec<Result<T, failure::Error>>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        resources
+            .into_iter()
+            .enumerate()
+            .inspect(|(idx, _)| {
+                if *idx != 0 {
+                    std::thread::sleep(std::time::Duration::from_secs(1));
+                }
+            })
+            .map(|(_idx, item)| self.query_filereport_allinfo(item))
+            .collect()
+    }
+
+    /// batch query file report
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    ///
+    /// let vtclient = VirusTotalClient::default();
+    /// let hashes = &["e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"];
+    /// let items = vtclient.batch_query(hashes, true);
+    /// for item in items {
+    ///     item.expect("failed to retrieve");
+    /// }
+    /// ```
+    ///
+    pub fn batch_query(
+        &self,
+        resources: impl IntoIterator<Item = impl AsRef<str>>,
+        public_api: bool,
+    ) -> Vec<Result<FileReport, failure::Error>> {
+        let sleeptime = if public_api {
+            std::time::Duration::from_secs(15)
+        } else {
+            std::time::Duration::from_secs(1)
+        };
+        resources
+            .into_iter()
+            .enumerate()
+            .inspect(|(idx, _item)| {
+                if *idx != 0 {
+                    std::thread::sleep(sleeptime);
+                }
+            })
+            .map(|(_idx, item)| self.query_filereport(item))
+            .collect()
+    }
 }
 
 /// scan_id for virustotal
