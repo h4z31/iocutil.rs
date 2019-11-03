@@ -13,10 +13,11 @@ iocutil = {version="0.1", git="https://github.com/0x75960/iocutil.rs"}
 and use in your code like...
 
 ```rust
-let h: iocutil::SampleHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".parse()?;
-// or
-let h = iocutil::SampleHash::try_from("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")?
+use iocutil::prelude::*;
 
-let q = h.exsitence();
-println!("{:?}", q);
+let h = SampleHash::new("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")?;
+let vtclient = VirusTotalClient::default();
+let fr = vtclient.query_filereport(h)?;
+
+println!("{:?}", fr);
 ```
