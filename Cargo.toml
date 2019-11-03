@@ -5,12 +5,15 @@ name = "iocutil"
 version = "0.1.0"
 
 [dependencies]
+chrono = "0.4.9"
 failure = "0.1.6"
-
-[dependencies.festum]
-git = "https://github.com/0x75960/festum.rs"
-version = "0.1.0"
+lazy_static = "1.4.0"
+reqwest = "0.9.22"
 
 [dependencies.midy]
 git = "https://github.com/0x75960/midy.rs"
 version = "0.1.0"
+
+[dependencies.serde]
+features = ["derive"]
+version = "1.0.102"

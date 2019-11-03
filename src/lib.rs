@@ -1,8 +1,12 @@
-use failure::_core::str::FromStr;
+use std::collections::HashSet;
 use std::convert::TryFrom;
+use std::str::FromStr;
+
+pub mod prelude;
+pub mod virustotal;
 
 /// SampleHash
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum SampleHash {
     Sha1(String),
     Sha256(String),
@@ -63,18 +67,47 @@ impl FromStr for SampleHash {
 }
 
 impl SampleHash {
-    /// existence on intelligence services
-    /// check with [festum.rs](https://github.com/0x75960/festum.rs)
-    ///
-    /// * VirusTotal
-    /// * VirusBay
-    /// * MalShare
-    /// * reverse.it
-    /// * AlienVault
-    pub fn existence(&self) -> festum::QueryResult {
-        let cli = festum::Client::default();
-        cli.query(self)
+    /// new SampleHash from md5/sha1/sha256 string
+    pub fn new(hash: impl AsRef<str>) -> Result<Self, failure::Error> {
+        hash.as_ref().parse()
     }
+
+    /// map AsRef<str> to SampleHash
+    pub fn map(
+        hashes: impl IntoIterator<Item = impl AsRef<str>>,
+    ) -> Result<Vec<Self>, failure::Error> {
+        hashes.into_iter().map(Self::new).collect()
+    }
+}
+
+/// uniquify the hashes
+///
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+///
+/// let twice = vec![
+///     "d41d8cd98f00b204e9800998ecf8427e",
+///     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+///     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+///     "d41d8cd98f00b204e9800998ecf8427e",
+///     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+///     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+/// ];
+///
+/// let hashes = SampleHash::map(twice).expect("failed to parse");
+/// assert_eq!(hashes.len(), 6);
+/// let uniqued: Vec<SampleHash> = uniquify(hashes);
+/// assert_eq!(uniqued.len(), 3);
+/// ```
+///
+pub fn uniquify<T>(hashes: impl IntoIterator<Item = SampleHash>) -> T
+where
+    T: std::iter::FromIterator<SampleHash>,
+{
+    let uniqued: HashSet<SampleHash> = hashes.into_iter().collect();
+    uniqued.into_iter().collect()
 }
 
 #[cfg(test)]
@@ -89,6 +122,47 @@ mod tests {
         )
         .is_ok());
         assert!(SampleHash::try_from("invalid_hash").is_err());
+    }
+
+    #[test]
+    fn new_works() {
+        SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").expect("parse error..");
+        SampleHash::new("d41d8cd98f00b204e9800998ecf8427e".to_string()).expect("parse error..");
+    }
+
+    #[test]
+    fn from_hashes_works() {
+        let v = vec![
+            "d41d8cd98f00b204e9800998ecf8427e",
+            "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ];
+        let s = SampleHash::map(v).expect("parse error..");
+        assert_eq!(s.len(), 3);
+
+        let v = vec![
+            "d41d8cd98f00b204e9800998ecf8427e".to_string(),
+            "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
+        ];
+        let s = SampleHash::map(v).expect("parse error..");
+        assert_eq!(s.len(), 3);
+
+        let v = &[
+            "d41d8cd98f00b204e9800998ecf8427e",
+            "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ];
+        let s = SampleHash::map(v).expect("parse error..");
+        assert_eq!(s.len(), 3);
+
+        let v = &[
+            "d41d8cd98f00b204e9800998ecf8427e".to_string(),
+            "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
+        ];
+        let s = SampleHash::map(v).expect("parse error..");
+        assert_eq!(s.len(), 3);
     }
 
     #[test]
@@ -117,19 +191,5 @@ mod tests {
             .expect("failed to parse");
         let x: Result<SampleHash, failure::Error> = "invalid_hash".parse();
         assert!(x.is_err());
-    }
-
-    #[test]
-    fn existence_works() {
-        let hash =
-            SampleHash::try_from("d41d8cd98f00b204e9800998ecf8427e").expect("failed to parse");
-        let result = hash.existence();
-        assert!(
-            result.virustotal
-                || result.virusbay
-                || result.alienvault
-                || result.malshare
-                || result.reverseit
-        );
     }
 }
