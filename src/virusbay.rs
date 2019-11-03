@@ -7,60 +7,60 @@ pub struct VirusBayClient;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Enterprise {
     #[serde(rename = "_id")]
-    id: String,
-    name: String,
+    pub id: String,
+    pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Uploader {
     #[serde(rename = "_id")]
-    id: String,
-    name: String,
-    enterprise: Option<Enterprise>,
+    pub id: String,
+    pub name: String,
+    pub enterprise: Option<Enterprise>,
 }
 
 #[allow(non_snake_case)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Tag {
     #[serde(rename = "_id")]
-    id: String,
-    name: String,
-    lowerCaseName: String,
-    isHash: bool,
+    pub id: String,
+    pub name: String,
+    pub lowerCaseName: String,
+    pub isHash: bool,
 }
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AVRecord {
-    ml: String,
-    av: String,
+    pub ml: String,
+    pub av: String,
 }
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VTReport {
-    positives: Option<i32>,
-    total: Option<i32>,
-    avs: Vec<AVRecord>,
+    pub positives: Option<i32>,
+    pub total: Option<i32>,
+    pub avs: Vec<AVRecord>,
 }
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SearchResult {
     #[serde(rename = "_id")]
-    id: String,
-    uploadedBy: Option<Uploader>,
-    md5: Option<String>,
-    tags: Option<Vec<Tag>>,
-    vt_report: Option<VTReport>,
-    fileType: Option<String>,
-    fileSize: Option<String>,
-    publishDate: String,
+    pub id: String,
+    pub uploadedBy: Option<Uploader>,
+    pub md5: Option<String>,
+    pub tags: Option<Vec<Tag>>,
+    pub vt_report: Option<VTReport>,
+    pub fileType: Option<String>,
+    pub fileSize: Option<String>,
+    pub publishDate: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Response {
-    search: Vec<SearchResult>,
+    pub search: Vec<SearchResult>,
 }
 
 #[derive(Fail, Debug)]

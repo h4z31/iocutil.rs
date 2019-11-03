@@ -189,10 +189,10 @@ pub enum VTError {
 /// ScanResult item of "scans"
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ScanResult {
-    detected: bool,
-    version: Option<String>,
-    result: Option<String>,
-    update: Option<String>,
+    pub detected: bool,
+    pub version: Option<String>,
+    pub result: Option<String>,
+    pub update: Option<String>,
 }
 
 /// RawFileReport structure (without fields included only in allinfo option)
@@ -249,12 +249,12 @@ impl std::convert::TryInto<FileReport> for RawFileReport {
 /// FileReport (without fields included only in allinfo option)
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileReport {
-    sha1: String,
-    sha256: String,
-    md5: String,
-    scan_date: String,
-    permalink: String,
-    positives: u32,
-    total: u32,
-    scans: HashMap<String, ScanResult>,
+    pub sha1: String,
+    pub sha256: String,
+    pub md5: String,
+    pub scan_date: String,
+    pub permalink: String,
+    pub positives: u32,
+    pub total: u32,
+    pub scans: HashMap<String, ScanResult>,
 }
