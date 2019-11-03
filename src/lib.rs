@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
+pub mod hashstr;
 pub mod prelude;
 pub mod virustotal;
 
@@ -35,12 +36,11 @@ impl AsRef<str> for SampleHash {
 
 /// conversion
 fn to_sample(value: impl AsRef<str>) -> Result<SampleHash, std::io::Error> {
-    let v = value.as_ref();
-    let s = v.to_owned();
-    match midy::detect(&v) {
-        midy::HashType::MD5 => Ok(SampleHash::Md5(s)),
-        midy::HashType::SHA1 => Ok(SampleHash::Sha1(s)),
-        midy::HashType::SHA256 => Ok(SampleHash::Sha256(s)),
+    let s = value.as_ref().to_lowercase();
+    match hashstr::detect(&s) {
+        hashstr::HashType::MD5 => Ok(SampleHash::Md5(s)),
+        hashstr::HashType::SHA1 => Ok(SampleHash::Sha1(s)),
+        hashstr::HashType::SHA256 => Ok(SampleHash::Sha256(s)),
         _ => Err(std::io::Error::from(std::io::ErrorKind::InvalidInput)),
     }
 }
@@ -69,7 +69,7 @@ impl FromStr for SampleHash {
 impl SampleHash {
     /// new SampleHash from md5/sha1/sha256 string
     pub fn new(hash: impl AsRef<str>) -> Result<Self, failure::Error> {
-        hash.as_ref().parse()
+        hash.as_ref().to_lowercase().parse()
     }
 
     /// map AsRef<str> to SampleHash
@@ -91,9 +91,9 @@ impl SampleHash {
 ///     "d41d8cd98f00b204e9800998ecf8427e",
 ///     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
 ///     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-///     "d41d8cd98f00b204e9800998ecf8427e",
-///     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-///     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+///     "D41D8CD98F00B204E9800998ECF8427E",
+///     "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709",
+///     "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
 /// ];
 ///
 /// let hashes = SampleHash::map(twice).expect("failed to parse");
@@ -110,24 +110,70 @@ where
     uniqued.into_iter().collect()
 }
 
+/// scrape the hashes from specified text
+///
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+///
+/// let txt = r#"d41d8cd98f00b204e9800998ecf8427e,da39a3ee5e6b4b0d3255bfef95601890afd80709,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+/// D41D8CD98F00B204E9800998ECF8427E,DA39A3EE5E6B4B0D3255BFEF95601890AFD80709,E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
+/// "#;
+/// let hashes: Vec<SampleHash> = scrape(txt);
+/// // it scrapes unique hashes (ignore-case)
+/// assert_eq!(hashes.len(), 3);
+/// ```
+///
+pub fn scrape<T>(text: impl AsRef<str>) -> T
+where
+    T: std::iter::FromIterator<SampleHash>,
+{
+    SampleHash::map(hashstr::find(&text))
+        .unwrap() // this must be success
+        .into_iter()
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn try_from_str_works() {
-        assert!(SampleHash::try_from("d41d8cd98f00b204e9800998ecf8427e").is_ok());
-        assert!(SampleHash::try_from("da39a3ee5e6b4b0d3255bfef95601890afd80709").is_ok());
-        assert!(SampleHash::try_from(
-            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        let a1 = SampleHash::try_from("d41d8cd98f00b204e9800998ecf8427e").expect("failed to parse");
+        let a2 = SampleHash::try_from("D41D8CD98F00B204E9800998ECF8427E").expect("failed to parse");
+        assert_eq!(a1, a2);
+
+        let b1 = SampleHash::try_from("da39a3ee5e6b4b0d3255bfef95601890afd80709")
+            .expect("failed to parse");
+        let b2 = SampleHash::try_from("DA39A3EE5E6B4B0D3255BFEF95601890AFD80709")
+            .expect("failed to parse");
+        assert_eq!(b1, b2);
+
+        let c1 = SampleHash::try_from(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         )
-        .is_ok());
+        .expect("failed to parse");
+        let c2 = SampleHash::try_from(
+            "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+        )
+        .expect("failed to parse");
+        assert_eq!(c1, c2);
+
         assert!(SampleHash::try_from("invalid_hash").is_err());
     }
 
     #[test]
     fn new_works() {
-        SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").expect("parse error..");
-        SampleHash::new("d41d8cd98f00b204e9800998ecf8427e".to_string()).expect("parse error..");
+        let a1 = SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").expect("parse error..");
+        let a2 = SampleHash::new("D41D8CD98F00B204E9800998ECF8427E").expect("parse error..");
+        let b1 =
+            SampleHash::new("d41d8cd98f00b204e9800998ecf8427e".to_string()).expect("parse error..");
+        let b2 =
+            SampleHash::new("D41D8CD98F00B204E9800998ECF8427E".to_string()).expect("parse error..");
+        assert_eq!(a1, a2);
+        assert_eq!(b1, b2);
+        assert_eq!(a1, b2);
     }
 
     #[test]
@@ -167,14 +213,28 @@ mod tests {
 
     #[test]
     fn try_from_string_works() {
-        assert!(SampleHash::try_from("d41d8cd98f00b204e9800998ecf8427e".to_string()).is_ok());
-        assert!(
-            SampleHash::try_from("da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string()).is_ok()
-        );
-        assert!(SampleHash::try_from(
-            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string()
+        let a1 = SampleHash::try_from("d41d8cd98f00b204e9800998ecf8427e".to_string())
+            .expect("failed to parse");
+        let a2 = SampleHash::try_from("D41D8CD98F00B204E9800998ECF8427E".to_string())
+            .expect("failed to parse");
+        assert_eq!(a1, a2);
+
+        let b1 = SampleHash::try_from("da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string())
+            .expect("failed to parse");
+        let b2 = SampleHash::try_from("DA39A3EE5E6B4B0D3255BFEF95601890AFD80709".to_string())
+            .expect("failed to parse");
+        assert_eq!(b1, b2);
+
+        let c1 = SampleHash::try_from(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
         )
-        .is_ok());
+        .expect("failed to parse");
+        let c2 = SampleHash::try_from(
+            "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855".to_string(),
+        )
+        .expect("failed to parse");
+        assert_eq!(c1, c2);
+
         assert!(SampleHash::try_from("invalid_hash".to_string()).is_err());
     }
 
