@@ -106,8 +106,11 @@ impl SampleHash {
     where
         T: std::iter::FromIterator<SampleHash>,
     {
-        let uniqued: HashSet<SampleHash> = hashes.into_iter().collect();
-        uniqued.into_iter().collect()
+        hashes
+            .into_iter()
+            .collect::<HashSet<SampleHash>>()
+            .into_iter()
+            .collect()
     }
 
     /// find unique hashes in specified text
