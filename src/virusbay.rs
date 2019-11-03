@@ -88,7 +88,7 @@ impl VirusBayClient {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use iocutil::virusbay::VirusBayClient;
     ///
     /// let client = VirusBayClient::default();
