@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 pub mod hashstr;
 pub mod prelude;
+pub mod scraper;
 pub mod virusbay;
 pub mod virustotal;
 
@@ -136,6 +137,30 @@ impl SampleHash {
             .unwrap() // this must be success
             .into_iter()
             .collect()
+    }
+
+    /// scrape hashes from specified url
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    ///
+    /// let hashes: std::collections::HashSet<SampleHash> = SampleHash::scrape("https://www.malware-traffic-analysis.net/2019/05/20/index.html").expect("failed to scrape https://www.malware-traffic-analysis.net/2019/05/20/index.html");
+    /// assert_eq!(hashes.len(), 2);
+    /// assert!(hashes.contains(&SampleHash::new("7f335f990851510ab9654e9fc1add2acec2c38a64563b711031769c58ecd45c0").unwrap()));
+    /// assert!(hashes.contains(&SampleHash::new("5a7042e698ce8e5cf6c4615e41a4205a52d9bb18a6ff214a967724c866cb72b4").unwrap()));
+    /// ```
+    pub fn scrape<T>(url: impl AsRef<str>) -> Result<T, failure::Error>
+    where
+        T: std::iter::FromIterator<SampleHash>,
+    {
+        let articles = scraper::get_article(url)?;
+        Ok(articles
+            .into_iter()
+            .map(|x| SampleHash::find(&x))
+            .flat_map(|x: Vec<SampleHash>| x)
+            .collect())
     }
 }
 

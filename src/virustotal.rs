@@ -40,7 +40,7 @@ impl VirusTotalClient {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use iocutil::prelude::*;
     /// use serde::Deserialize;
     ///
@@ -88,7 +88,7 @@ impl VirusTotalClient {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use iocutil::prelude::*;
     /// use serde::Deserialize;
     ///
@@ -128,7 +128,7 @@ impl VirusTotalClient {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use iocutil::prelude::*;
     ///
     /// let vtclient = VirusTotalClient::default();
