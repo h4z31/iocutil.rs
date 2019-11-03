@@ -1,6 +1,6 @@
 # iocutil
 
-IoC utility
+IoC utility for malware researcher
 
 ## usage
 
@@ -21,3 +21,11 @@ let fr = vtclient.query_filereport(h)?;
 
 println!("{:?}", fr);
 ```
+
+## future work
+
+* add api clients for 
+    * AlienVault OTX
+    * reverse.it
+    
+ * documentation
