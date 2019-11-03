@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 pub mod hashstr;
 pub mod prelude;
+pub mod virusbay;
 pub mod virustotal;
 
 /// SampleHash
