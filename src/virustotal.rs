@@ -53,6 +53,7 @@ impl VirusTotalClient {
     /// let client = VirusTotalClient::default();
     /// let sample = SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").expect("failed to parse hash");
     /// let report: FieldsWhatYouNeed = client.query_filereport_allinfo(sample).expect("failed to retrieve hash");
+    /// assert_eq!(report.response_code, 1);
     /// ```
     ///
     pub fn query_filereport_allinfo<T>(
