@@ -79,61 +79,61 @@ impl SampleHash {
     ) -> Result<Vec<Self>, failure::Error> {
         hashes.into_iter().map(Self::new).collect()
     }
-}
 
-/// uniquify the hashes
-///
-/// # Example
-///
-/// ```
-/// use iocutil::prelude::*;
-///
-/// let twice = vec![
-///     "d41d8cd98f00b204e9800998ecf8427e",
-///     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
-///     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-///     "D41D8CD98F00B204E9800998ECF8427E",
-///     "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709",
-///     "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
-/// ];
-///
-/// let hashes = SampleHash::map(twice).expect("failed to parse");
-/// assert_eq!(hashes.len(), 6);
-/// let uniqued: Vec<SampleHash> = uniquify(hashes);
-/// assert_eq!(uniqued.len(), 3);
-/// ```
-///
-pub fn uniquify<T>(hashes: impl IntoIterator<Item = SampleHash>) -> T
-where
-    T: std::iter::FromIterator<SampleHash>,
-{
-    let uniqued: HashSet<SampleHash> = hashes.into_iter().collect();
-    uniqued.into_iter().collect()
-}
+    /// uniquify the hashes
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    ///
+    /// let twice = vec![
+    ///     "d41d8cd98f00b204e9800998ecf8427e",
+    ///     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    ///     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ///     "D41D8CD98F00B204E9800998ECF8427E",
+    ///     "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709",
+    ///     "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    /// ];
+    ///
+    /// let hashes = SampleHash::map(twice).expect("failed to parse");
+    /// assert_eq!(hashes.len(), 6);
+    /// let uniqued: Vec<SampleHash> = SampleHash::uniquify(hashes);
+    /// assert_eq!(uniqued.len(), 3);
+    /// ```
+    ///
+    pub fn uniquify<T>(hashes: impl IntoIterator<Item = SampleHash>) -> T
+    where
+        T: std::iter::FromIterator<SampleHash>,
+    {
+        let uniqued: HashSet<SampleHash> = hashes.into_iter().collect();
+        uniqued.into_iter().collect()
+    }
 
-/// scrape the hashes from specified text
-///
-/// # Example
-///
-/// ```
-/// use iocutil::prelude::*;
-///
-/// let txt = r#"d41d8cd98f00b204e9800998ecf8427e,da39a3ee5e6b4b0d3255bfef95601890afd80709,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-/// D41D8CD98F00B204E9800998ECF8427E,DA39A3EE5E6B4B0D3255BFEF95601890AFD80709,E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
-/// "#;
-/// let hashes: Vec<SampleHash> = scrape(txt);
-/// // it scrapes unique hashes (ignore-case)
-/// assert_eq!(hashes.len(), 3);
-/// ```
-///
-pub fn scrape<T>(text: impl AsRef<str>) -> T
-where
-    T: std::iter::FromIterator<SampleHash>,
-{
-    SampleHash::map(hashstr::find(&text))
-        .unwrap() // this must be success
-        .into_iter()
-        .collect()
+    /// find unique hashes in specified text
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    ///
+    /// let txt = r#"d41d8cd98f00b204e9800998ecf8427e,da39a3ee5e6b4b0d3255bfef95601890afd80709,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    /// D41D8CD98F00B204E9800998ECF8427E,DA39A3EE5E6B4B0D3255BFEF95601890AFD80709,E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
+    /// "#;
+    /// let hashes: Vec<SampleHash> = SampleHash::find(txt);
+    /// // it scrapes unique hashes (ignore-case)
+    /// assert_eq!(hashes.len(), 3);
+    /// ```
+    ///
+    pub fn find<T>(text: impl AsRef<str>) -> T
+    where
+        T: std::iter::FromIterator<SampleHash>,
+    {
+        SampleHash::map(hashstr::find(&text))
+            .unwrap() // this must be success
+            .into_iter()
+            .collect()
+    }
 }
 
 #[cfg(test)]
