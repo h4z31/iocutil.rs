@@ -71,6 +71,15 @@ impl AlienVaultOTXClient {
     }
 
     /// get pulses for x days
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    ///
+    /// let client = AlienVaultOTXClient::default();
+    /// let pulses = client.pulses_for(7); // get for 7 days
+    /// ```
     pub fn pulses_for(&self, days: i64) -> GenericResult<Vec<Pulse>> {
         self.pulses_from(Utc::now() - time::Duration::days(days))
     }
