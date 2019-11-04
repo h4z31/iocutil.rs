@@ -12,21 +12,21 @@ pub fn get_html(url: impl AsRef<str>) -> Result<String, failure::Error> {
     Ok(reqwest::get(url.as_ref())?.text()?)
 }
 
+/// scrape articles from html text
 pub fn scrape_articles(html: impl AsRef<str>) -> Vec<String> {
     let document = Html::parse_document(html.as_ref());
     document
         .select(&ARTICLE_SELECTOR)
-        .into_iter()
-        .map(|x| x.text().into_iter().collect::<Vec<_>>().join(" "))
+        .map(|x| x.text().collect::<Vec<_>>().join(" "))
         .collect()
 }
 
+/// scrape body from html text
 pub fn scrape_body(html: impl AsRef<str>) -> Vec<String> {
     let document = Html::parse_document(html.as_ref());
     document
         .select(&BODY_SELECTOR)
-        .into_iter()
-        .map(|x| x.text().into_iter().collect::<Vec<_>>().join(" "))
+        .map(|x| x.text().collect::<Vec<_>>().join(" "))
         .collect()
 }
 
