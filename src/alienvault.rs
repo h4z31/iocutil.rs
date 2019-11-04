@@ -175,11 +175,7 @@ impl Pulses {
 
     /// get all hashes in all matched pulse
     pub fn get_all_hashes(self) -> Vec<SampleHash> {
-        self.get_all()
-            .into_iter()
-            .map(|x| x.into())
-            .flat_map(|x: Vec<SampleHash>| x)
-            .collect()
+        hashes_in(self.get_all())
     }
 }
 
