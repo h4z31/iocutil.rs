@@ -1,7 +1,11 @@
+use failure::_core::fmt::{Error, Formatter};
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
+type GenericResult<T> = std::result::Result<T, failure::Error>;
+
+pub mod alienvault;
 pub mod hashstr;
 pub mod prelude;
 pub mod scraper;
@@ -14,6 +18,12 @@ pub enum SampleHash {
     Sha1(String),
     Sha256(String),
     Md5(String),
+}
+
+impl std::fmt::Display for SampleHash {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        write!(f, "{}", self.as_ref())
+    }
 }
 
 impl Into<String> for SampleHash {
@@ -75,9 +85,7 @@ impl SampleHash {
     }
 
     /// map AsRef<str> to SampleHash
-    pub fn map(
-        hashes: impl IntoIterator<Item = impl AsRef<str>>,
-    ) -> Result<Vec<Self>, failure::Error> {
+    pub fn map(hashes: impl IntoIterator<Item = impl AsRef<str>>) -> GenericResult<Vec<Self>> {
         hashes.into_iter().map(Self::new).collect()
     }
 
@@ -151,7 +159,7 @@ impl SampleHash {
     /// assert!(hashes.contains(&SampleHash::new("7f335f990851510ab9654e9fc1add2acec2c38a64563b711031769c58ecd45c0").unwrap()));
     /// assert!(hashes.contains(&SampleHash::new("5a7042e698ce8e5cf6c4615e41a4205a52d9bb18a6ff214a967724c866cb72b4").unwrap()));
     /// ```
-    pub fn scrape<T>(url: impl AsRef<str>) -> Result<T, failure::Error>
+    pub fn scrape<T>(url: impl AsRef<str>) -> GenericResult<T>
     where
         T: std::iter::FromIterator<SampleHash>,
     {
