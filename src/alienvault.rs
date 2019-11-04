@@ -23,7 +23,25 @@ impl Default for AlienVaultOTXClient {
 #[derive(Debug, Fail)]
 pub enum AlienVaultOTXError {
     #[fail(display = "invalid setting")]
-    InvalidSettingError(String),
+    InvalidSetting(String),
+
+    #[fail(display = "request failed")]
+    RequestFailed,
+}
+
+#[derive(Debug)]
+pub enum QueryType {
+    General,
+    Analysis,
+}
+
+impl std::fmt::Display for QueryType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            QueryType::General => write!(f, "general"),
+            QueryType::Analysis => write!(f, "analysis"),
+        }
+    }
 }
 
 impl AlienVaultOTXClient {
@@ -38,13 +56,58 @@ impl AlienVaultOTXClient {
             .api_key(self.apikey.clone())
             .modified_since(datetime)
             .build()
-            .map_err(AlienVaultOTXError::InvalidSettingError)?
+            .map_err(AlienVaultOTXError::InvalidSetting)?
             .get_all())
     }
 
     /// get pulses for x days
     pub fn pulses_for(&self, days: i64) -> GenericResult<Vec<Pulse>> {
         self.pulses_from(Utc::now() - time::Duration::days(days))
+    }
+
+    /// make indicator url
+    fn indicator_url(&self, hash: impl AsRef<str>, section: QueryType) -> String {
+        format!(
+            "https://otx.alienvault.com/api/v1/indicators/file/{}/{}",
+            hash.as_ref(),
+            section
+        )
+    }
+
+    /// make get request
+    fn make_get_request(&self, url: impl AsRef<str>) -> reqwest::RequestBuilder {
+        reqwest::Client::new()
+            .get(url.as_ref())
+            .header("X-OTX-API-KEY", self.apikey.as_str())
+    }
+
+    /// get raw json report about indicator
+    pub fn get_raw_json(&self, hash: impl AsRef<str>, section: QueryType) -> GenericResult<String> {
+        let mut res = self
+            .make_get_request(self.indicator_url(hash, section))
+            .send()?;
+
+        if !res.status().is_success() {
+            return Err(AlienVaultOTXError::RequestFailed.into());
+        }
+
+        Ok(res.text()?)
+    }
+
+    /// query with free format
+    pub fn query<T>(&self, hash: impl AsRef<str>, section: QueryType) -> GenericResult<T>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let mut res = self
+            .make_get_request(self.indicator_url(hash, section))
+            .send()?;
+
+        if !res.status().is_success() {
+            return Err(AlienVaultOTXError::RequestFailed.into());
+        }
+
+        Ok(res.json()?)
     }
 }
 
