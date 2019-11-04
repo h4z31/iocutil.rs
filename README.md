@@ -1,6 +1,23 @@
 # iocutil
 
-IoC utility for malware researcher
+IoC utility for malware researchers
+
+## What does it do?
+
+* utility for hash values
+    * highly easy manipulatable format(`SampleHash`)
+        * compatible with `AsRef<str>` functions
+        * case-insensitive equivalence (save hashes as lowercase)
+    * hash validation(md5/sha1/sha256)
+    * uniquify hashes 
+    * scrape hashes from web page
+        * with less noise (it targets texts only `article` (or `body` if `artcile` not found))
+    * find hashes in text
+    
+* api client for some intelligence services
+    * VirusTotal
+    * VirusBay
+    * AlienVault OTX
 
 ## usage
 
