@@ -11,6 +11,15 @@ pub struct AlienVaultOTXClient {
     apikey: String,
 }
 
+impl Default for AlienVaultOTXClient {
+    fn default() -> Self {
+        AlienVaultOTXClient {
+            apikey: std::env::var("OTX_APIKEY")
+                .expect("please set AlienVault OTX API key to environment var $OTX_APIKEY"),
+        }
+    }
+}
+
 #[derive(Debug, Fail)]
 pub enum AlienVaultOTXError {
     #[fail(display = "invalid setting")]
