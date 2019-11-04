@@ -51,6 +51,16 @@ impl AlienVaultOTXClient {
     }
 
     /// get pulses modified from specified datetime
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    /// use chrono::DateTime;
+    ///
+    /// let client = AlienVaultOTXClient::default();
+    /// let pulses = client.pulses_from(Utc::now() - Duration::days(7));
+    /// ```
     pub fn pulses_from(&self, datetime: DateTime<Utc>) -> GenericResult<Vec<Pulse>> {
         Ok(PulsesBuilder::default()
             .api_key(self.apikey.clone())
@@ -82,6 +92,16 @@ impl AlienVaultOTXClient {
     }
 
     /// get raw json report about indicator
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    ///
+    /// let client = AlienVaultOTXClient::default();
+    /// let general = client.get_raw_json("4451058bebb3385efa33d41c30566646", QueryType::General).unwrap();
+    /// let analysis = client.get_raw_json("4451058bebb3385efa33d41c30566646", QueryType::Analysis).unwrap();
+    /// ```
     pub fn get_raw_json(&self, hash: impl AsRef<str>, section: QueryType) -> GenericResult<String> {
         let mut res = self
             .make_get_request(self.indicator_url(hash, section))
@@ -95,6 +115,23 @@ impl AlienVaultOTXClient {
     }
 
     /// query with free format
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    /// use serde::Deserialize;
+    ///
+    /// #[derive(Deserialize)]
+    /// struct Response {
+    ///     page_type: String,
+    ///     // ...
+    /// }
+    ///
+    /// let client = AlienVaultOTXClient::default();
+    /// let report: Response = client.query("4451058bebb3385efa33d41c30566646", QueryType::Analysis).unwrap();
+    /// assert_eq!(report.page_type.as_str(), "ELF");
+    /// ```
     pub fn query<T>(&self, hash: impl AsRef<str>, section: QueryType) -> GenericResult<T>
     where
         T: serde::de::DeserializeOwned,
