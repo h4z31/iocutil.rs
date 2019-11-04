@@ -15,17 +15,20 @@ and use in your code like...
 ```rust
 use iocutil::prelude::*;
 
-let h = SampleHash::new("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")?;
-let vtclient = VirusTotalClient::default();
-let fr = vtclient.query_filereport(h)?;
+let h = SampleHash::scrape(
+    "https://www.malware-traffic-analysis.net/2019/05/20/index.html"
+    ).expect("failed to retrieve hashes")?;
 
-println!("{:?}", fr);
+let vtclient = VirusTotalClient::default();
+
+let frs = vtclient.batch_query(h);
+
+frs.into_iter().flat_map(|x| x).for_each(|x| println!("{}", x.positives));
 ```
 
 ## future work
 
 * add api clients for 
-    * AlienVault OTX
     * reverse.it
     
- * documentation
+* documentation
