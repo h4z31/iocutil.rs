@@ -4,6 +4,7 @@ use failure::Fail;
 use reqwest::header::HeaderValue;
 use serde::Deserialize;
 
+use crate::datetime::days_ago;
 use crate::{GenericResult, SampleHash};
 
 /// AlienVaultOTX API Client
@@ -56,10 +57,9 @@ impl AlienVaultOTXClient {
     ///
     /// ```ignore
     /// use iocutil::prelude::*;
-    /// use chrono::DateTime;
     ///
     /// let client = AlienVaultOTXClient::default();
-    /// let pulses = client.pulses_from(Utc::now() - Duration::days(7));
+    /// let pulses = client.pulses_from(days_ago(7));
     /// ```
     pub fn pulses_from(&self, datetime: DateTime<Utc>) -> GenericResult<Vec<Pulse>> {
         Ok(PulsesBuilder::default()
@@ -81,7 +81,7 @@ impl AlienVaultOTXClient {
     /// let pulses = client.pulses_for(7); // get for 7 days
     /// ```
     pub fn pulses_for(&self, days: i64) -> GenericResult<Vec<Pulse>> {
-        self.pulses_from(Utc::now() - time::Duration::days(days))
+        self.pulses_from(days_ago(days))
     }
 
     /// make indicator url
@@ -167,7 +167,7 @@ pub struct Pulses {
     limit: u32,
     #[builder(default = "1")]
     page: u32,
-    #[builder(default = "Utc::now() - time::Duration::days(7)")]
+    #[builder(default = "days_ago(7)")]
     modified_since: DateTime<Utc>,
     #[builder(default = "false")]
     has_done: bool,
