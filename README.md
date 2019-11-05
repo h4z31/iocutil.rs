@@ -38,7 +38,7 @@ let h: Vec<_> = SampleHash::scrape(
 
 let vtclient = VirusTotalClient::default();
 
-let frs = vtclient.batch_query(h);
+let frs = vtclient.batch_query(h, true);
 
 frs.into_iter().flat_map(|x| x).for_each(|x| println!("{}", x.positives));
 ```
