@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryInto;
 
+use crate::SampleHash;
+
 pub struct VirusTotalClient {
     apikey: String,
 }
@@ -22,6 +24,14 @@ impl VirusTotalClient {
             self.apikey,
             allinfo,
             resource.as_ref()
+        )
+    }
+
+    fn download_url(&self, hash: impl AsRef<str>) -> String {
+        format!(
+            "https://www.virustotal.com/vtapi/v2/file/download?apikey={}&hash={}",
+            self.apikey,
+            hash.as_ref()
         )
     }
 
@@ -160,6 +170,43 @@ impl VirusTotalClient {
             .map(|(_idx, item)| self.query_filereport(item))
             .collect()
     }
+
+    /// download a file from hash
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    ///
+    /// let client = VirusTotalClient::default();
+    /// client.download(
+    ///         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ///         "./e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    ///     ).expect("failed to download file");
+    ///
+    /// std::fs::remove_file("./e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    ///     .expect("failed to remove file");
+    /// ```
+    pub fn download(
+        &self,
+        hash: impl TryInto<SampleHash>,
+        into: impl AsRef<std::path::Path>,
+    ) -> Result<(), failure::Error> {
+        let h = hash
+            .try_into()
+            .or(Err(std::io::Error::from(std::io::ErrorKind::InvalidInput)))?;
+        let h = h.as_ref();
+
+        let mut res = reqwest::get(self.download_url(h).as_str())?;
+        if !res.status().is_success() {
+            return Err(VTError::DownloadFailed(h.to_owned()).into());
+        }
+
+        let mut f = std::fs::File::create(into)?;
+        std::io::copy(&mut res, &mut f)?;
+
+        Ok(())
+    }
 }
 
 /// scan_id for virustotal
@@ -184,6 +231,9 @@ pub enum VTError {
 
     #[fail(display = "record missing field(s)")]
     MissingFields(String),
+
+    #[fail(display = "download failed")]
+    DownloadFailed(String),
 }
 
 /// ScanResult item of "scans"
