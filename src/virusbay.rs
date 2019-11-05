@@ -104,7 +104,7 @@ impl VirusBayClient {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use iocutil::virusbay::{VirusBayClient, Response};
     ///
     /// let client = VirusBayClient::default();
