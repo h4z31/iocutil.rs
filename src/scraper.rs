@@ -1,3 +1,4 @@
+use crate::GenericResult;
 use failure::Fail;
 use lazy_static::lazy_static;
 use scraper::{Html, Selector};
@@ -8,7 +9,7 @@ lazy_static! {
 }
 
 /// get html from specified url
-pub fn get_html(url: impl AsRef<str>) -> Result<String, failure::Error> {
+pub fn get_html(url: impl AsRef<str>) -> GenericResult<String> {
     Ok(reqwest::get(url.as_ref())?.text()?)
 }
 
@@ -37,15 +38,15 @@ pub enum ScrapingError {
 }
 
 /// get article (or body) text from specified url
-pub fn get_article(url: impl AsRef<str>) -> Result<Vec<String>, failure::Error> {
+pub fn get_article(url: impl AsRef<str>) -> GenericResult<String> {
     let html = get_html(url)?;
     let articles = scrape_articles(&html);
     if !articles.is_empty() {
-        return Ok(articles);
+        return Ok(articles.join("\n"));
     }
     let body = scrape_body(&html);
     if body.is_empty() {
         return Err(ScrapingError::TargetNotFound.into());
     }
-    Ok(body)
+    Ok(body.join("\n"))
 }

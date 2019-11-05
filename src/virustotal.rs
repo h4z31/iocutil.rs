@@ -36,11 +36,7 @@ impl VirusTotalClient {
         )
     }
 
-    fn internal_query<T>(
-        &self,
-        resource: impl AsRef<str>,
-        allinfo: bool,
-    ) -> Result<T, failure::Error>
+    fn internal_query<T>(&self, resource: impl AsRef<str>, allinfo: bool) -> GenericResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
@@ -71,10 +67,7 @@ impl VirusTotalClient {
     /// assert_eq!(report.response_code, 1);
     /// ```
     ///
-    pub fn query_filereport_allinfo<T>(
-        &self,
-        resource: impl AsRef<str>,
-    ) -> Result<T, failure::Error>
+    pub fn query_filereport_allinfo<T>(&self, resource: impl AsRef<str>) -> GenericResult<T>
     where
         T: serde::de::DeserializeOwned,
     {

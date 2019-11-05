@@ -81,7 +81,7 @@ impl FromStr for SampleHash {
 
 impl SampleHash {
     /// new SampleHash from md5/sha1/sha256 string
-    pub fn new(hash: impl AsRef<str>) -> Result<Self, failure::Error> {
+    pub fn new(hash: impl AsRef<str>) -> GenericResult<Self> {
         hash.as_ref().to_lowercase().parse()
     }
 
@@ -164,12 +164,7 @@ impl SampleHash {
     where
         T: std::iter::FromIterator<SampleHash>,
     {
-        let articles = scraper::get_article(url)?;
-        Ok(articles
-            .into_iter()
-            .map(|x| SampleHash::find(&x))
-            .flat_map(|x: Vec<SampleHash>| x)
-            .collect())
+        Ok(SampleHash::find(scraper::get_article(url)?))
     }
 }
 
