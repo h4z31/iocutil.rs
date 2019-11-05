@@ -32,7 +32,7 @@ and use in your code like...
 ```rust
 use iocutil::prelude::*;
 
-let h = SampleHash::scrape(
+let h: Vec<_> = SampleHash::scrape(
     "https://www.malware-traffic-analysis.net/2019/05/20/index.html"
     ).expect("failed to retrieve hashes")?;
 
