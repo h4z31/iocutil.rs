@@ -154,7 +154,7 @@ impl SampleHash {
     ///     "a", // please note that invalid hashes are ignored
     /// ];
     ///
-    /// let uniqued: Vec<SampleHash> = SampleHash::uniquify(twice);
+    /// let uniqued: Vec<_> = SampleHash::uniquify(twice);
     /// assert_eq!(uniqued.len(), 3);
     /// assert!(uniqued.contains(&SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").unwrap()));
     /// assert!(uniqued.contains(&SampleHash::new("da39a3ee5e6b4b0d3255bfef95601890afd80709").unwrap()));
