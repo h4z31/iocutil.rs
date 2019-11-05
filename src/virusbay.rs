@@ -1,5 +1,8 @@
+use crate::{GenericResult, SampleHash};
 use failure::Fail;
 use serde::{Deserialize, Serialize};
+use std::convert::TryInto;
+use std::io::{Error, ErrorKind};
 
 #[derive(Default)]
 pub struct VirusBayClient;
@@ -74,12 +77,53 @@ impl VirusBayClient {
         format!("https://beta.virusbay.io/sample/search?q={}", hash.as_ref())
     }
 
+    /// get raw json
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::virusbay::VirusBayClient;
+    ///
+    /// let client = VirusBayClient::default();
+    ///
+    /// client.get_raw_json("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    ///     .expect("failed to get report");
+    /// ```
+    pub fn get_raw_json(&self, hash: impl TryInto<SampleHash>) -> GenericResult<String> {
+        Ok(reqwest::get(
+            self.query_url(
+                hash.try_into()
+                    .or(Err(Error::from(ErrorKind::InvalidInput)))?,
+            )
+            .as_str(),
+        )?
+        .text()?)
+    }
+
     /// query with free format
-    pub fn query<T>(&self, hash: impl AsRef<str>) -> Result<T, failure::Error>
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::virusbay::{VirusBayClient, Response};
+    ///
+    /// let client = VirusBayClient::default();
+    ///
+    /// let r: Response = client.query("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    ///     .expect("failed to search");
+    /// ```
+    pub fn query<T>(&self, hash: impl TryInto<SampleHash>) -> GenericResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
-        Ok(reqwest::get(self.query_url(hash).as_str())?.json()?)
+        Ok(reqwest::get(
+            self.query_url(
+                hash.try_into()
+                    .or(Err(Error::from(ErrorKind::InvalidInput)))?,
+            )
+            .as_str(),
+        )?
+        .json()?)
     }
 
     /// formatted query
@@ -94,7 +138,7 @@ impl VirusBayClient {
     /// let client = VirusBayClient::default();
     /// client.fquery("9fbdc5eca123e81571e8966b9b4e4a1e").expect("failed to retrieve sample 9fbdc5eca123e81571e8966b9b4e4a1e");
     /// ```
-    pub fn fquery(&self, hash: impl AsRef<str>) -> Result<Vec<SearchResult>, failure::Error> {
+    pub fn fquery(&self, hash: impl TryInto<SampleHash>) -> GenericResult<Vec<SearchResult>> {
         let r: Response = self.query(hash)?;
         if r.search.is_empty() {
             return Err(VirusBayError::NotFoundOnVirusBay.into());
