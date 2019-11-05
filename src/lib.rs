@@ -114,7 +114,8 @@ impl SampleHash {
     ///     "d41d8cd98f00b204e9800998ecf8427e"
     /// ];
     ///
-    /// let r1: HashSet<_> = SampleHash::map(hashes1).expect("failed to map");
+    /// let r1: Result<HashSet<_>, _> = SampleHash::map(hashes1);
+    /// let r1 = r1.unwrap();
     /// assert_eq!(r1.len(), 1);
     /// assert!(r1.contains(&SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").unwrap()));
     ///
@@ -123,12 +124,17 @@ impl SampleHash {
     ///     "invalid_hash"
     /// ];
     ///
-    /// let r2: Result<Vec<_>, failure::Error> = SampleHash::map(hashes2);
-    /// assert!(r2.is_err())
+    /// let r2: Result<Vec<_>, _> = SampleHash::map(&hashes2);
+    /// assert!(r2.is_err());
+    ///
+    /// let r3: Vec<Result<_, _>> = SampleHash::map(&hashes2);
+    /// assert_eq!(r3.len(), 2);
+    /// assert!(r3.iter().nth(0).unwrap().is_ok());
+    /// assert!(r3.iter().nth(1).unwrap().is_err());
     /// ```
-    pub fn map<T>(hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>) -> GenericResult<T>
+    pub fn map<T>(hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>) -> T
     where
-        T: std::iter::FromIterator<SampleHash>,
+        T: std::iter::FromIterator<GenericResult<SampleHash>>,
     {
         hashes
             .into_iter()
@@ -184,7 +190,7 @@ impl SampleHash {
     /// let txt = r#"d41d8cd98f00b204e9800998ecf8427e,da39a3ee5e6b4b0d3255bfef95601890afd80709,e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     /// D41D8CD98F00B204E9800998ECF8427E,DA39A3EE5E6B4B0D3255BFEF95601890AFD80709,E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
     /// "#;
-    /// let hashes: Vec<SampleHash> = SampleHash::find(txt);
+    /// let hashes: Vec<_> = SampleHash::find(txt);
     /// // it scrapes unique hashes (ignore-case)
     /// assert_eq!(hashes.len(), 3);
     /// ```
@@ -193,7 +199,8 @@ impl SampleHash {
     where
         T: std::iter::FromIterator<SampleHash>,
     {
-        SampleHash::map(hashstr::find(&text)).unwrap()
+        let v: GenericResult<HashSet<_>> = SampleHash::map(hashstr::find(&text));
+        v.unwrap().into_iter().collect()
     }
 
     /// scrape hashes from specified url
@@ -203,7 +210,7 @@ impl SampleHash {
     /// ```ignore
     /// use iocutil::prelude::*;
     ///
-    /// let hashes: std::collections::HashSet<SampleHash> = SampleHash::scrape("https://www.malware-traffic-analysis.net/2019/05/20/index.html").expect("failed to scrape https://www.malware-traffic-analysis.net/2019/05/20/index.html");
+    /// let hashes: std::collections::HashSet<_> = SampleHash::scrape("https://www.malware-traffic-analysis.net/2019/05/20/index.html").expect("failed to scrape https://www.malware-traffic-analysis.net/2019/05/20/index.html");
     /// assert_eq!(hashes.len(), 2);
     /// assert!(hashes.contains(&SampleHash::new("7f335f990851510ab9654e9fc1add2acec2c38a64563b711031769c58ecd45c0").unwrap()));
     /// assert!(hashes.contains(&SampleHash::new("5a7042e698ce8e5cf6c4615e41a4205a52d9bb18a6ff214a967724c866cb72b4").unwrap()));
@@ -264,32 +271,32 @@ mod tests {
             "da39a3ee5e6b4b0d3255bfef95601890afd80709",
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         ];
-        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
-        assert_eq!(s.len(), 3);
+        let s: GenericResult<Vec<_>> = SampleHash::map(v);
+        assert_eq!(s.unwrap().len(), 3);
 
         let v = vec![
             "d41d8cd98f00b204e9800998ecf8427e".to_string(),
             "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
         ];
-        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
-        assert_eq!(s.len(), 3);
+        let s: GenericResult<Vec<_>> = SampleHash::map(v);
+        assert_eq!(s.unwrap().len(), 3);
 
         let v = &[
             "d41d8cd98f00b204e9800998ecf8427e",
             "da39a3ee5e6b4b0d3255bfef95601890afd80709",
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         ];
-        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
-        assert_eq!(s.len(), 3);
+        let s: GenericResult<Vec<_>> = SampleHash::map(v);
+        assert_eq!(s.unwrap().len(), 3);
 
         let v = &[
             "d41d8cd98f00b204e9800998ecf8427e".to_string(),
             "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
         ];
-        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
-        assert_eq!(s.len(), 3);
+        let s: GenericResult<Vec<_>> = SampleHash::map(v);
+        assert_eq!(s.unwrap().len(), 3);
     }
 
     #[test]
@@ -330,7 +337,7 @@ mod tests {
         let _: SampleHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             .parse()
             .expect("failed to parse");
-        let x: Result<SampleHash, failure::Error> = "invalid_hash".parse();
+        let x: Result<SampleHash, _> = "invalid_hash".parse();
         assert!(x.is_err());
     }
 }
