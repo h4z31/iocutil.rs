@@ -67,9 +67,23 @@ impl TryFrom<&str> for SampleHash {
     }
 }
 
+impl TryFrom<&&str> for SampleHash {
+    type Error = failure::Error;
+    fn try_from(value: &&str) -> Result<Self, Self::Error> {
+        Ok(to_sample(value)?)
+    }
+}
+
 impl TryFrom<String> for SampleHash {
     type Error = failure::Error;
     fn try_from(value: String) -> Result<Self, Self::Error> {
+        Ok(to_sample(value)?)
+    }
+}
+
+impl TryFrom<&String> for SampleHash {
+    type Error = failure::Error;
+    fn try_from(value: &String) -> Result<Self, Self::Error> {
         Ok(to_sample(value)?)
     }
 }
@@ -87,9 +101,39 @@ impl SampleHash {
         hash.as_ref().to_lowercase().parse()
     }
 
-    /// map AsRef<str> to SampleHash
-    pub fn map(hashes: impl IntoIterator<Item = impl AsRef<str>>) -> GenericResult<Vec<Self>> {
-        hashes.into_iter().map(Self::new).collect()
+    /// map strings to SampleHash
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    /// use std::collections::HashSet;
+    ///
+    /// let hashes1 = vec![
+    ///     "d41d8cd98f00b204e9800998ecf8427e",
+    ///     "d41d8cd98f00b204e9800998ecf8427e"
+    /// ];
+    ///
+    /// let r1: HashSet<_> = SampleHash::map(hashes1).expect("failed to map");
+    /// assert_eq!(r1.len(), 1);
+    /// assert!(r1.contains(&SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").unwrap()));
+    ///
+    /// let hashes2 = vec![
+    ///     "d41d8cd98f00b204e9800998ecf8427e",
+    ///     "invalid_hash"
+    /// ];
+    ///
+    /// let r2: Result<Vec<_>, failure::Error> = SampleHash::map(hashes2);
+    /// assert!(r2.is_err())
+    /// ```
+    pub fn map<T>(hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>) -> GenericResult<T>
+    where
+        T: std::iter::FromIterator<SampleHash>,
+    {
+        hashes
+            .into_iter()
+            .map(|x| unwrap_try_into(x).map_err(|e| e.into()))
+            .collect()
     }
 
     /// uniquify the hashes
@@ -149,10 +193,7 @@ impl SampleHash {
     where
         T: std::iter::FromIterator<SampleHash>,
     {
-        SampleHash::map(hashstr::find(&text))
-            .unwrap() // this must be success
-            .into_iter()
-            .collect()
+        SampleHash::map(hashstr::find(&text)).unwrap()
     }
 
     /// scrape hashes from specified url
@@ -223,7 +264,7 @@ mod tests {
             "da39a3ee5e6b4b0d3255bfef95601890afd80709",
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         ];
-        let s = SampleHash::map(v).expect("parse error..");
+        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
         assert_eq!(s.len(), 3);
 
         let v = vec![
@@ -231,7 +272,7 @@ mod tests {
             "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
         ];
-        let s = SampleHash::map(v).expect("parse error..");
+        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
         assert_eq!(s.len(), 3);
 
         let v = &[
@@ -239,7 +280,7 @@ mod tests {
             "da39a3ee5e6b4b0d3255bfef95601890afd80709",
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         ];
-        let s = SampleHash::map(v).expect("parse error..");
+        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
         assert_eq!(s.len(), 3);
 
         let v = &[
@@ -247,7 +288,7 @@ mod tests {
             "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(),
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
         ];
-        let s = SampleHash::map(v).expect("parse error..");
+        let s: Vec<_> = SampleHash::map(v).expect("parse error..");
         assert_eq!(s.len(), 3);
     }
 
