@@ -3,8 +3,8 @@ use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::io::{Error, ErrorKind};
 
+use crate::util::unwrap_try_into;
 use crate::{GenericResult, SampleHash};
 
 pub struct VirusTotalClient {
@@ -118,9 +118,7 @@ impl VirusTotalClient {
         allinfo: bool,
         datetime: chrono::DateTime<Utc>,
     ) -> GenericResult<String> {
-        let hash = hash
-            .try_into()
-            .or(Err(Error::from(ErrorKind::InvalidInput)))?;
+        let hash = unwrap_try_into(hash)?;
         let r = scan_id(hash, datetime);
         self.get_raw_filereport_json(r, allinfo)
     }
@@ -143,9 +141,7 @@ impl VirusTotalClient {
         hash: impl TryInto<SampleHash>,
         datetime: chrono::DateTime<Utc>,
     ) -> GenericResult<FileReport> {
-        let hash = hash
-            .try_into()
-            .or(Err(Error::from(ErrorKind::InvalidInput)))?;
+        let hash = unwrap_try_into(hash)?;
         let r = scan_id(hash, datetime);
         self.query_filereport(r)
     }
@@ -257,9 +253,7 @@ impl VirusTotalClient {
         hash: impl TryInto<SampleHash>,
         into: impl AsRef<std::path::Path>,
     ) -> Result<(), failure::Error> {
-        let h = hash
-            .try_into()
-            .or(Err(std::io::Error::from(std::io::ErrorKind::InvalidInput)))?;
+        let h = unwrap_try_into(hash)?;
         let h = h.as_ref();
 
         let mut res = reqwest::get(self.download_url(h).as_str())?;

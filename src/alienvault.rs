@@ -1,8 +1,10 @@
+use crate::util::unwrap_try_into;
 use chrono::prelude::*;
 use derive_builder::Builder;
 use failure::Fail;
 use reqwest::header::HeaderValue;
 use serde::Deserialize;
+use std::convert::TryInto;
 
 use crate::datetime::days_ago;
 use crate::{GenericResult, SampleHash};
@@ -111,7 +113,13 @@ impl AlienVaultOTXClient {
     /// let general = client.get_raw_json("4451058bebb3385efa33d41c30566646", QueryType::General).unwrap();
     /// let analysis = client.get_raw_json("4451058bebb3385efa33d41c30566646", QueryType::Analysis).unwrap();
     /// ```
-    pub fn get_raw_json(&self, hash: impl AsRef<str>, section: QueryType) -> GenericResult<String> {
+    pub fn get_raw_json(
+        &self,
+        hash: impl TryInto<SampleHash>,
+        section: QueryType,
+    ) -> GenericResult<String> {
+        let hash = unwrap_try_into(hash)?;
+
         let mut res = self
             .make_get_request(self.indicator_url(hash, section))
             .send()?;
@@ -141,10 +149,11 @@ impl AlienVaultOTXClient {
     /// let report: Response = client.query("4451058bebb3385efa33d41c30566646", QueryType::Analysis).unwrap();
     /// assert_eq!(report.page_type.as_str(), "ELF");
     /// ```
-    pub fn query<T>(&self, hash: impl AsRef<str>, section: QueryType) -> GenericResult<T>
+    pub fn query<T>(&self, hash: impl TryInto<SampleHash>, section: QueryType) -> GenericResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
+        let hash = unwrap_try_into(hash)?;
         let mut res = self
             .make_get_request(self.indicator_url(hash, section))
             .send()?;

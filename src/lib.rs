@@ -10,6 +10,7 @@ pub mod datetime;
 pub mod hashstr;
 pub mod prelude;
 pub mod scraper;
+mod util;
 pub mod virusbay;
 pub mod virustotal;
 

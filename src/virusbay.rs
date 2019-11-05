@@ -1,8 +1,8 @@
+use crate::util::unwrap_try_into;
 use crate::{GenericResult, SampleHash};
 use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
-use std::io::{Error, ErrorKind};
 
 #[derive(Default)]
 pub struct VirusBayClient;
@@ -90,14 +90,7 @@ impl VirusBayClient {
     ///     .expect("failed to get report");
     /// ```
     pub fn get_raw_json(&self, hash: impl TryInto<SampleHash>) -> GenericResult<String> {
-        Ok(reqwest::get(
-            self.query_url(
-                hash.try_into()
-                    .or(Err(Error::from(ErrorKind::InvalidInput)))?,
-            )
-            .as_str(),
-        )?
-        .text()?)
+        Ok(reqwest::get(self.query_url(unwrap_try_into(hash)?).as_str())?.text()?)
     }
 
     /// query with free format
@@ -116,14 +109,7 @@ impl VirusBayClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        Ok(reqwest::get(
-            self.query_url(
-                hash.try_into()
-                    .or(Err(Error::from(ErrorKind::InvalidInput)))?,
-            )
-            .as_str(),
-        )?
-        .json()?)
+        Ok(reqwest::get(self.query_url(unwrap_try_into(hash)?).as_str())?.json()?)
     }
 
     /// formatted query
