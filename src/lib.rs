@@ -1,6 +1,7 @@
+use crate::util::unwrap_try_into;
 use failure::_core::fmt::{Error, Formatter};
 use std::collections::HashSet;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::str::FromStr;
 
 type GenericResult<T> = std::result::Result<T, failure::Error>;
@@ -102,23 +103,28 @@ impl SampleHash {
     ///     "d41d8cd98f00b204e9800998ecf8427e",
     ///     "da39a3ee5e6b4b0d3255bfef95601890afd80709",
     ///     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ///     // uniquify case-insensitive
     ///     "D41D8CD98F00B204E9800998ECF8427E",
     ///     "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709",
     ///     "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    ///     "a", // please note that invalid hashes are ignored
     /// ];
     ///
-    /// let hashes = SampleHash::map(twice).expect("failed to parse");
-    /// assert_eq!(hashes.len(), 6);
-    /// let uniqued: Vec<SampleHash> = SampleHash::uniquify(hashes);
+    /// let uniqued: Vec<SampleHash> = SampleHash::uniquify(twice);
     /// assert_eq!(uniqued.len(), 3);
+    /// assert!(uniqued.contains(&SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").unwrap()));
+    /// assert!(uniqued.contains(&SampleHash::new("da39a3ee5e6b4b0d3255bfef95601890afd80709").unwrap()));
+    /// assert!(uniqued.contains(&SampleHash::new("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap()));
     /// ```
     ///
-    pub fn uniquify<T>(hashes: impl IntoIterator<Item = SampleHash>) -> T
+    pub fn uniquify<T>(hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>) -> T
     where
         T: std::iter::FromIterator<SampleHash>,
     {
         hashes
             .into_iter()
+            .map(unwrap_try_into)
+            .flat_map(|x| x) // filter failed to convert
             .collect::<HashSet<SampleHash>>()
             .into_iter()
             .collect()
