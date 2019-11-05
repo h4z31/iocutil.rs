@@ -3,8 +3,9 @@ use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::io::{Error, ErrorKind};
 
-use crate::SampleHash;
+use crate::{GenericResult, SampleHash};
 
 pub struct VirusTotalClient {
     apikey: String,
@@ -43,7 +44,11 @@ impl VirusTotalClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        Ok(reqwest::get(self.file_report_url(resource, allinfo).as_str())?.json()?)
+        let mut res = reqwest::get(self.file_report_url(resource, allinfo).as_str())?;
+        if res.status().is_success() == false {
+            return Err(VTError::RequestFailed.into());
+        }
+        Ok(res.json()?)
     }
 
     /// get file report of VirusTotal (with allinfo option)
@@ -77,12 +82,79 @@ impl VirusTotalClient {
     }
 
     /// get raw filereport as text
-    pub fn get_raw_filereport_text(
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    ///
+    /// let client = VirusTotalClient::default();
+    /// let json_text = client.get_raw_filereport_json(
+    ///         "d41d8cd98f00b204e9800998ecf8427e",
+    ///         false,
+    ///     ).expect("failed to get report");
+    /// ```
+    pub fn get_raw_filereport_json(
         &self,
         resource: impl AsRef<str>,
         allinfo: bool,
-    ) -> Result<String, failure::Error> {
-        Ok(reqwest::get(self.file_report_url(resource, allinfo).as_str())?.text()?)
+    ) -> GenericResult<String> {
+        let mut res = reqwest::get(self.file_report_url(resource, allinfo).as_str())?;
+        if res.status().is_success() == false {
+            return Err(VTError::RequestFailed.into());
+        }
+        Ok(res.text()?)
+    }
+
+    /// get raw filereport json at specified datetime
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    ///
+    /// let client = VirusTotalClient::default();
+    /// let json_text = client.get_raw_filereport_json_at(
+    ///         "d41d8cd98f00b204e9800998ecf8427e",
+    ///         false,
+    ///         days_ago(7)
+    ///     ).expect("failed to get report");
+    /// ```
+    pub fn get_raw_filereport_json_at(
+        &self,
+        hash: impl TryInto<SampleHash>,
+        allinfo: bool,
+        datetime: chrono::DateTime<Utc>,
+    ) -> GenericResult<String> {
+        let hash = hash
+            .try_into()
+            .or(Err(Error::from(ErrorKind::InvalidInput)))?;
+        let r = scan_id(hash, datetime);
+        self.get_raw_filereport_json(r, allinfo)
+    }
+
+    /// query_filereport_at
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    /// let client = VirusTotalClient::default();
+    ///
+    /// let report = client.query_filereport_at(
+    ///         "d41d8cd98f00b204e9800998ecf8427e",
+    ///         days_ago(7)
+    ///     ).expect("failed to query");
+    /// ```
+    pub fn query_filereport_at(
+        &self,
+        hash: impl TryInto<SampleHash>,
+        datetime: chrono::DateTime<Utc>,
+    ) -> GenericResult<FileReport> {
+        let hash = hash
+            .try_into()
+            .or(Err(Error::from(ErrorKind::InvalidInput)))?;
+        let r = scan_id(hash, datetime);
+        self.query_filereport(r)
     }
 
     /// query file report (without allinfo)
@@ -234,6 +306,9 @@ pub enum VTError {
 
     #[fail(display = "download failed")]
     DownloadFailed(String),
+
+    #[fail(display = "request failed")]
+    RequestFailed,
 }
 
 /// ScanResult item of "scans"
