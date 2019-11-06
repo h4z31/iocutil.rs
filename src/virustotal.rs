@@ -266,6 +266,111 @@ impl VirusTotalClient {
 
         Ok(())
     }
+
+    /// WIP: NOT TESTED
+    pub fn search(
+        &self,
+        query: impl AsRef<str>,
+        goal: Option<usize>,
+    ) -> impl Iterator<Item = Vec<SampleHash>> {
+        Search::new(&self.apikey, query, goal)
+    }
+
+    /// WIP: NOT TESTED
+    pub fn search_all<T>(&self, query: impl AsRef<str>) -> T
+    where
+        T: std::iter::FromIterator<SampleHash>,
+    {
+        self.search(query, None).flat_map(|x| x).collect()
+    }
+}
+
+pub struct Search {
+    apikey: String,
+    query: String,
+    goal: Option<usize>,
+    offset: Option<String>,
+    current: usize,
+    has_done: bool,
+}
+
+impl Search {
+    fn new(apikey: impl AsRef<str>, query: impl AsRef<str>, goal: Option<usize>) -> Self {
+        Search {
+            apikey: apikey.as_ref().to_owned(),
+            query: query.as_ref().to_owned(),
+            offset: None,
+            current: 0,
+            has_done: false,
+            goal,
+        }
+    }
+
+    fn search_url(&self, query: impl AsRef<str>, offset: &Option<String>) -> String {
+        match offset {
+            Some(o) => format!(
+                "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}&offset={}",
+                self.apikey,
+                query.as_ref(),
+                o
+            ),
+            None => format!(
+                "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}",
+                self.apikey,
+                query.as_ref(),
+            ),
+        }
+    }
+
+    fn do_search<T>(&mut self) -> GenericResult<T>
+    where
+        T: std::iter::FromIterator<SampleHash>,
+    {
+        if self.has_done {
+            return Err(VTError::AlreadyReachToGoal.into());
+        }
+
+        if let Some(x) = self.goal {
+            // case goal has set
+            if x <= self.current {
+                // abort if already reach to goal
+                return Err(VTError::AlreadyReachToGoal.into());
+            }
+        }
+
+        let mut res = reqwest::get(self.search_url(&self.query, &self.offset).as_str())?;
+        if !res.status().is_success() {
+            return Err(VTError::RequestFailed.into());
+        }
+
+        let result: SearchResponse = res.json()?;
+        if result.response_code != 1 {
+            return Err(VTError::ResponseCodeError(result.response_code).into());
+        }
+
+        if self.goal.is_some() {
+            self.current += result.hashes.len();
+        }
+
+        if result.hashes.len() < 300 {
+            // > On each request you will get at most 300 files matching the query
+            // so it's done if result.hashes does not have 300 hashes.
+            // https://developers.virustotal.com/reference#file-search
+            self.has_done = true;
+        }
+
+        self.offset = Some(result.offset);
+
+        SampleHash::try_map(result.hashes)
+    }
+}
+
+impl Iterator for Search {
+    type Item = Vec<SampleHash>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.do_search().ok()
+    }
 }
 
 /// scan_id for virustotal
@@ -296,6 +401,9 @@ pub enum VTError {
 
     #[fail(display = "request failed")]
     RequestFailed,
+
+    #[fail(display = "already reach to goal")]
+    AlreadyReachToGoal,
 }
 
 /// ScanResult item of "scans"
@@ -369,4 +477,11 @@ pub struct FileReport {
     pub positives: u32,
     pub total: u32,
     pub scans: HashMap<String, ScanResult>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SearchResponse {
+    response_code: i32,
+    offset: String,
+    hashes: Vec<String>,
 }
