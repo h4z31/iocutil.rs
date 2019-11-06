@@ -268,7 +268,7 @@ impl VirusTotalClient {
     }
 
     /// WIP: NOT TESTED
-    pub fn search(
+    fn internal_search(
         &self,
         query: impl AsRef<str>,
         goal: Option<usize>,
@@ -277,11 +277,11 @@ impl VirusTotalClient {
     }
 
     /// WIP: NOT TESTED
-    pub fn search_all<T>(&self, query: impl AsRef<str>) -> T
+    pub fn search<T>(&self, query: impl AsRef<str>, goal: Option<usize>) -> T
     where
         T: std::iter::FromIterator<SampleHash>,
     {
-        self.search(query, None).flat_map(|x| x).collect()
+        self.internal_search(query, goal).flat_map(|x| x).collect()
     }
 }
 
