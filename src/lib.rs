@@ -102,6 +102,39 @@ impl SampleHash {
     }
 
     /// map strings to SampleHash
+    /// `try_map` is a better way if you want to map to Result (like Result<Vec<_>, _>).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    ///
+    /// let hashes = vec![
+    ///         "d41d8cd98f00b204e9800998ecf8427e",
+    ///         "invalid_hash"
+    ///     ];    
+    ///
+    /// let r1: Result<Vec<_>, _> = SampleHash::map(&hashes);
+    ///
+    /// assert!(r1.is_err());
+    ///
+    /// let r2: Vec<Result<_, _>> = SampleHash::map(&hashes);
+    ///
+    /// assert_eq!(r2.len(), 2);
+    /// assert!(r2.iter().nth(0).unwrap().is_ok());
+    /// assert!(r2.iter().nth(1).unwrap().is_err());
+    /// ```
+    pub fn map<T>(hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>) -> T
+    where
+        T: std::iter::FromIterator<GenericResult<SampleHash>>,
+    {
+        hashes
+            .into_iter()
+            .map(|x| unwrap_try_into(x).map_err(|e| e.into()))
+            .collect()
+    }
+
+    /// try map strings to SampleHash
     ///
     /// # Example
     ///
@@ -114,8 +147,7 @@ impl SampleHash {
     ///     "d41d8cd98f00b204e9800998ecf8427e"
     /// ];
     ///
-    /// let r1: Result<HashSet<_>, _> = SampleHash::map(hashes1);
-    /// let r1 = r1.unwrap();
+    /// let r1: HashSet<_> = SampleHash::try_map(hashes1).expect("failed to map");
     /// assert_eq!(r1.len(), 1);
     /// assert!(r1.contains(&SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").unwrap()));
     ///
@@ -124,17 +156,14 @@ impl SampleHash {
     ///     "invalid_hash"
     /// ];
     ///
-    /// let r2: Result<Vec<_>, _> = SampleHash::map(&hashes2);
+    /// let r2: Result<HashSet<_>, _> = SampleHash::try_map(&hashes2);
     /// assert!(r2.is_err());
-    ///
-    /// let r3: Vec<Result<_, _>> = SampleHash::map(&hashes2);
-    /// assert_eq!(r3.len(), 2);
-    /// assert!(r3.iter().nth(0).unwrap().is_ok());
-    /// assert!(r3.iter().nth(1).unwrap().is_err());
     /// ```
-    pub fn map<T>(hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>) -> T
+    pub fn try_map<T>(
+        hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>,
+    ) -> GenericResult<T>
     where
-        T: std::iter::FromIterator<GenericResult<SampleHash>>,
+        T: std::iter::FromIterator<SampleHash>,
     {
         hashes
             .into_iter()
