@@ -35,28 +35,28 @@ macro_rules! at {
     (now) => {
         chrono::Utc::now()
     };
-    ($m:literal, minutes ago) => {
+    ($m:expr, minutes ago) => {
         chrono::Utc::now() - time::Duration::minutes($m)
     };
-    ($h:literal, hours ago) => {
+    ($h:expr, hours ago) => {
         chrono::Utc::now() - time::Duration::hours($h)
     };
-    ($d:literal, days ago) => {
+    ($d:expr, days ago) => {
         chrono::Utc::now() - time::Duration::days($d)
     };
-    ($w:literal, weeks ago) => {
+    ($w:expr, weeks ago) => {
         chrono::Utc::now() - time::Duration::weeks($w)
     };
-    ($base:expr => $m:literal, minutes) => {
+    ($base:expr => $m:expr, minutes) => {
         iocutil::datetime::after($base, time::Duration::minutes($m))
     };
-    ($base:expr => $h:literal, hours) => {
+    ($base:expr => $h:expr, hours) => {
         iocutil::datetime::after($base, time::Duration::hours($h))
     };
-    ($base:expr => $d:literal, days) => {
+    ($base:expr => $d:expr, days) => {
         iocutil::datetime::after($base, time::Duration::days($d))
     };
-    ($base:expr => $w:literal, weeks) => {
+    ($base:expr => $w:expr, weeks) => {
         iocutil::datetime::after($base, time::Duration::weeks($w))
     };
 }
