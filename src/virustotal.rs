@@ -527,3 +527,144 @@ pub struct SearchResponse {
     offset: Option<String>,
     hashes: Option<Vec<String>>,
 }
+
+/// macro provides easy way to make format for query first submission
+///
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+///
+/// let f = day!(2019, 11, 01).unwrap();
+/// let t = day!(2019, 11, 02).unwrap();
+/// let fs1 = fs!(f => t);
+/// assert_eq!(fs1.as_str(), "(fs:2019-11-01T00:00:00+ AND fs:2019-11-02T00:00:00-)");
+///
+/// let fs2 = fs!(f =>);
+/// assert_eq!(fs2.as_str(), "fs:2019-11-01T00:00:00+");
+///
+/// let fs3 = fs!(=> t);
+/// assert_eq!(fs3.as_str(), "fs:2019-11-02T00:00:00-");
+///
+/// let for_a_week = fs!(at!(1, weeks ago) =>);
+/// ```
+#[macro_export]
+macro_rules! fs {
+    ($from:expr => $to:expr) => {
+        format!(
+            "(fs:{}+ AND fs:{}-)",
+            iocutil::datetime::vtdatetime($from),
+            iocutil::datetime::vtdatetime($to)
+        )
+    };
+    ($from:expr =>) => {
+        format!("fs:{}+", iocutil::datetime::vtdatetime($from))
+    };
+    (=> $to:expr) => {
+        format!("fs:{}-", iocutil::datetime::vtdatetime($to))
+    };
+}
+
+/// macro provides easy way to make format for query last submission
+///
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+///
+/// let f = day!(2019, 11, 01).unwrap();
+/// let t = day!(2019, 11, 02).unwrap();
+/// let ls1 = ls!(f => t);
+/// assert_eq!(ls1.as_str(), "(ls:2019-11-01T00:00:00+ AND ls:2019-11-02T00:00:00-)");
+///
+/// let ls2 = ls!(f =>);
+/// assert_eq!(ls2.as_str(), "ls:2019-11-01T00:00:00+");
+///
+/// let ls3 = ls!(=> t);
+/// assert_eq!(ls3.as_str(), "ls:2019-11-02T00:00:00-");
+///
+/// let for_a_week = ls!(at!(1, weeks ago) =>);
+/// ```
+#[macro_export]
+macro_rules! ls {
+    ($from:expr => $to:expr) => {
+        format!(
+            "(ls:{}+ AND ls:{}-)",
+            iocutil::datetime::vtdatetime($from),
+            iocutil::datetime::vtdatetime($to)
+        )
+    };
+    ($from:expr =>) => {
+        format!("ls:{}+", iocutil::datetime::vtdatetime($from))
+    };
+    (=> $to:expr) => {
+        format!("ls:{}-", iocutil::datetime::vtdatetime($to))
+    };
+}
+
+/// macro provides easy way to make format for query last analysis
+///
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+///
+/// let f = day!(2019, 11, 01).unwrap();
+/// let t = day!(2019, 11, 02).unwrap();
+///
+/// let la1 = la!(f => t);
+/// assert_eq!(la1.as_str(), "(la:2019-11-01T00:00:00+ AND la:2019-11-02T00:00:00-)");
+///
+/// let la2 = la!(f =>);
+/// assert_eq!(la2.as_str(), "la:2019-11-01T00:00:00+");
+///
+/// let la3 = la!(=> t);
+/// assert_eq!(la3.as_str(), "la:2019-11-02T00:00:00-");
+///
+/// let for_a_week = la!(at!(1, weeks ago) =>);
+/// ```
+#[macro_export]
+macro_rules! la {
+    ($from:expr => $to:expr) => {
+        format!(
+            "(la:{}+ AND la:{}-)",
+            iocutil::datetime::vtdatetime($from),
+            iocutil::datetime::vtdatetime($to)
+        )
+    };
+    ($from:expr =>) => {
+        format!("la:{}+", iocutil::datetime::vtdatetime($from))
+    };
+    (=> $to:expr) => {
+        format!("la:{}-", iocutil::datetime::vtdatetime($to))
+    };
+}
+
+/// macro provides easy way to make format for query positive numbers
+///
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+///
+/// let p1 = p!(1 => 10);
+/// assert_eq!(p1.as_str(), "(p:1+ AND p:10-)");
+///
+/// let p2 = p!(1 =>);
+/// assert_eq!(p2.as_str(), "p:1+");
+///
+/// let p3 = p!(=> 10);
+/// assert_eq!(p3.as_str(), "p:10-");
+/// ```
+#[macro_export]
+macro_rules! p {
+    ($from:expr => $to:expr) => {
+        format!("(p:{}+ AND p:{}-)", $from, $to)
+    };
+    ($num:expr =>) => {
+        format!("p:{}+", $num)
+    };
+    (=> $num:expr) => {
+        format!("p:{}-", $num)
+    };
+}

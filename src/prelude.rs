@@ -5,6 +5,7 @@ pub use crate::hasher::Hasher;
 pub use crate::virustotal::{scan_id, VirusTotalClient};
 pub use crate::SampleHash;
 pub use crate::{at, day};
+pub use crate::{fs, la, ls, p};
 pub use chrono::{DateTime, Utc};
 pub use std::convert::{TryFrom, TryInto};
 pub use time::Duration;
