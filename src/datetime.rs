@@ -26,6 +26,10 @@ pub fn after(base: impl Into<DateTime<Utc>>, after: Duration) -> DateTime<Utc> {
 /// at!(three_hours_ago => 1, hours); // 2 hours ago
 /// at!(two_days_ago => 1, days); // a day ago
 /// at!(two_week_ago => 1, weeks); // a week ago
+/// at!(now => 10, minutes); // 10 minutes later
+/// at!(now => 1, hours); // 1 hours later
+/// at!(now => 10, days); // 10 days later
+/// at!(now => 1, weeks); // 1 week later
 ///
 /// let x = vtdatetime(at!(day!(1992, 01, 17).unwrap() => 1, days));
 /// assert_eq!(x.as_str(), "1992-01-18T00:00:00")
@@ -58,6 +62,18 @@ macro_rules! at {
     };
     ($base:expr => $w:expr, weeks) => {
         iocutil::datetime::after($base, time::Duration::weeks($w))
+    };
+    (now => $m:expr, minutes) => {
+        iocutil::datetime::after(chrono::Utc::now(), time::Duration::minutes($m))
+    };
+    (now => $h:expr, hours) => {
+        iocutil::datetime::after(chrono::Utc::now(), time::Duration::hours($h))
+    };
+    (now => $d:expr, days) => {
+        iocutil::datetime::after(chrono::Utc::now(), time::Duration::days($d))
+    };
+    (now => $w:expr, weeks) => {
+        iocutil::datetime::after(chrono::Utc::now(), time::Duration::weeks($w))
     };
 }
 
