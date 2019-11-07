@@ -3,6 +3,7 @@ use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryInto;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::util::unwrap_try_into;
 use crate::{GenericResult, SampleHash};
@@ -267,21 +268,46 @@ impl VirusTotalClient {
         Ok(())
     }
 
-    /// WIP: NOT TESTED
-    fn internal_search(
+    /// search by page (Private API required)
+    /// https://www.virustotal.com/intelligence/help/file-search/#search-modifiers
+    ///
+    /// # Example
+    /// 
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    /// 
+    /// let client = VirusTotalClient::default();
+    /// let mut pages = client.search_by_pages("p:5+ AND submitter:CN", Some(600));
+    ///
+    /// let samples: Vec<_> = pages.do_search().expect("failed to search");
+    /// assert_eq!(samples.len(), 300)
+    /// ```
+    pub fn search_by_pages(
         &self,
         query: impl AsRef<str>,
         goal: Option<usize>,
-    ) -> impl Iterator<Item = Vec<SampleHash>> {
+    ) -> Search {
         Search::new(&self.apikey, query, goal)
     }
 
-    /// WIP: NOT TESTED
+    /// search samples (Private API required)
+    /// https://www.virustotal.com/intelligence/help/file-search/#search-modifiers
+    /// 
+    /// # Example
+    /// 
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    /// 
+    /// let client = VirusTotalClient::default();
+    ///
+    /// let samples: Vec<_> = client.search("p:5+ AND submitter:CN", Some(600));
+    /// assert_eq!(samples.len(), 600)
+    /// ```
     pub fn search<T>(&self, query: impl AsRef<str>, goal: Option<usize>) -> T
     where
         T: std::iter::FromIterator<SampleHash>,
     {
-        self.internal_search(query, goal).flat_map(|x| x).collect()
+        self.search_by_pages(query, goal).into_iter().flat_map(|x| x).collect()
     }
 }
 
@@ -295,10 +321,11 @@ pub struct Search {
 }
 
 impl Search {
-    fn new(apikey: impl AsRef<str>, query: impl AsRef<str>, goal: Option<usize>) -> Self {
+    /// create new object
+    pub fn new(apikey: impl AsRef<str>, query: impl AsRef<str>, goal: Option<usize>) -> Self {
         Search {
             apikey: apikey.as_ref().to_owned(),
-            query: query.as_ref().to_owned(),
+            query: Search::escape_search_query(query),
             offset: None,
             current: 0,
             has_done: false,
@@ -306,23 +333,27 @@ impl Search {
         }
     }
 
-    fn search_url(&self, query: impl AsRef<str>, offset: &Option<String>) -> String {
+    fn escape_search_query(query: impl AsRef<str>) -> String {
+         utf8_percent_encode(query.as_ref(), NON_ALPHANUMERIC).to_string()
+    }
+
+    fn search_url(&self, offset: &Option<String>) -> String {
         match offset {
-            Some(o) => format!(
-                "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}&offset={}",
-                self.apikey,
-                query.as_ref(),
-                o
-            ),
-            None => format!(
-                "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}",
-                self.apikey,
-                query.as_ref(),
-            ),
+            Some(o) => format!("https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}&offset={}",
+                    self.apikey.as_str(),
+                    self.query.as_str(),
+                    o,
+                    ),
+            None => format!("https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}",
+                    self.apikey.as_str(),
+                    self.query.as_str(),
+                    ),
+
         }
     }
 
-    fn do_search<T>(&mut self) -> GenericResult<T>
+    /// do search once (most 300 samples per a page)
+    pub fn do_search<T>(&mut self) -> GenericResult<T>
     where
         T: std::iter::FromIterator<SampleHash>,
     {
@@ -330,15 +361,9 @@ impl Search {
             return Err(VTError::AlreadyReachToGoal.into());
         }
 
-        if let Some(x) = self.goal {
-            // case goal has set
-            if x <= self.current {
-                // abort if already reach to goal
-                return Err(VTError::AlreadyReachToGoal.into());
-            }
-        }
+        let url = self.search_url(&self.offset);
 
-        let mut res = reqwest::get(self.search_url(&self.query, &self.offset).as_str())?;
+        let mut res = reqwest::get(url.as_str())?;
         if !res.status().is_success() {
             return Err(VTError::RequestFailed.into());
         }
@@ -348,20 +373,22 @@ impl Search {
             return Err(VTError::ResponseCodeError(result.response_code).into());
         }
 
-        if self.goal.is_some() {
-            self.current += result.hashes.len();
+        let hashes = result.hashes.ok_or(VTError::RequestFailed)?;
+
+        if let Some(x) = self.goal {
+            self.current += hashes.len();
+            if x <= self.current {
+                self.has_done = true;
+            }
         }
 
-        if result.hashes.len() < 300 {
-            // > On each request you will get at most 300 files matching the query
-            // so it's done if result.hashes does not have 300 hashes.
-            // https://developers.virustotal.com/reference#file-search
+        if result.offset.is_none() {
             self.has_done = true;
         }
 
-        self.offset = Some(result.offset);
+        self.offset = result.offset;
 
-        SampleHash::try_map(result.hashes)
+        SampleHash::try_map(hashes)
     }
 }
 
@@ -482,6 +509,6 @@ pub struct FileReport {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchResponse {
     response_code: i32,
-    offset: String,
-    hashes: Vec<String>,
+    offset: Option<String>,
+    hashes: Option<Vec<String>>,
 }
