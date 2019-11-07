@@ -1,6 +1,6 @@
 # iocutil
 
-IoC utility for malware researchers
+IoC utilities for malware researchers
 
 ## What does it do?
 
