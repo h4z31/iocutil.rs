@@ -553,15 +553,15 @@ macro_rules! fs {
     ($from:expr => $to:expr) => {
         format!(
             "(fs:{}+ AND fs:{}-)",
-            iocutil::datetime::vtdatetime($from),
-            iocutil::datetime::vtdatetime($to)
+            $crate::datetime::vtdatetime($from),
+            $crate::datetime::vtdatetime($to)
         )
     };
     ($from:expr =>) => {
-        format!("fs:{}+", iocutil::datetime::vtdatetime($from))
+        format!("fs:{}+", $crate::datetime::vtdatetime($from))
     };
     (=> $to:expr) => {
-        format!("fs:{}-", iocutil::datetime::vtdatetime($to))
+        format!("fs:{}-", $crate::datetime::vtdatetime($to))
     };
 }
 
@@ -590,15 +590,15 @@ macro_rules! ls {
     ($from:expr => $to:expr) => {
         format!(
             "(ls:{}+ AND ls:{}-)",
-            iocutil::datetime::vtdatetime($from),
-            iocutil::datetime::vtdatetime($to)
+            $crate::datetime::vtdatetime($from),
+            $crate::datetime::vtdatetime($to)
         )
     };
     ($from:expr =>) => {
-        format!("ls:{}+", iocutil::datetime::vtdatetime($from))
+        format!("ls:{}+", $crate::datetime::vtdatetime($from))
     };
     (=> $to:expr) => {
-        format!("ls:{}-", iocutil::datetime::vtdatetime($to))
+        format!("ls:{}-", $crate::datetime::vtdatetime($to))
     };
 }
 
@@ -628,15 +628,15 @@ macro_rules! la {
     ($from:expr => $to:expr) => {
         format!(
             "(la:{}+ AND la:{}-)",
-            iocutil::datetime::vtdatetime($from),
-            iocutil::datetime::vtdatetime($to)
+            $crate::datetime::vtdatetime($from),
+            $crate::datetime::vtdatetime($to)
         )
     };
     ($from:expr =>) => {
-        format!("la:{}+", iocutil::datetime::vtdatetime($from))
+        format!("la:{}+", $crate::datetime::vtdatetime($from))
     };
     (=> $to:expr) => {
-        format!("la:{}-", iocutil::datetime::vtdatetime($to))
+        format!("la:{}-", $crate::datetime::vtdatetime($to))
     };
 }
 
