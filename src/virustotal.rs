@@ -1,9 +1,9 @@
 use chrono::Utc;
 use failure::Fail;
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryInto;
-use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::util::unwrap_try_into;
 use crate::{GenericResult, SampleHash};
@@ -272,32 +272,28 @@ impl VirusTotalClient {
     /// https://www.virustotal.com/intelligence/help/file-search/#search-modifiers
     ///
     /// # Example
-    /// 
+    ///
     /// ```ignore
     /// use iocutil::prelude::*;
-    /// 
+    ///
     /// let client = VirusTotalClient::default();
     /// let mut pages = client.search_by_pages("p:5+ AND submitter:CN", Some(600));
     ///
     /// let samples: Vec<_> = pages.do_search().expect("failed to search");
     /// assert_eq!(samples.len(), 300)
     /// ```
-    pub fn search_by_pages(
-        &self,
-        query: impl AsRef<str>,
-        goal: Option<usize>,
-    ) -> Search {
+    pub fn search_by_pages(&self, query: impl AsRef<str>, goal: Option<usize>) -> Search {
         Search::new(&self.apikey, query, goal)
     }
 
     /// search samples (Private API required)
     /// https://www.virustotal.com/intelligence/help/file-search/#search-modifiers
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```ignore
     /// use iocutil::prelude::*;
-    /// 
+    ///
     /// let client = VirusTotalClient::default();
     ///
     /// let samples: Vec<_> = client.search("p:5+ AND submitter:CN", Some(600));
@@ -307,7 +303,10 @@ impl VirusTotalClient {
     where
         T: std::iter::FromIterator<SampleHash>,
     {
-        self.search_by_pages(query, goal).into_iter().flat_map(|x| x).collect()
+        self.search_by_pages(query, goal)
+            .into_iter()
+            .flat_map(|x| x)
+            .collect()
     }
 }
 
@@ -334,21 +333,22 @@ impl Search {
     }
 
     fn escape_search_query(query: impl AsRef<str>) -> String {
-         utf8_percent_encode(query.as_ref(), NON_ALPHANUMERIC).to_string()
+        utf8_percent_encode(query.as_ref(), NON_ALPHANUMERIC).to_string()
     }
 
     fn search_url(&self, offset: &Option<String>) -> String {
         match offset {
-            Some(o) => format!("https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}&offset={}",
-                    self.apikey.as_str(),
-                    self.query.as_str(),
-                    o,
-                    ),
-            None => format!("https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}",
-                    self.apikey.as_str(),
-                    self.query.as_str(),
-                    ),
-
+            Some(o) => format!(
+                "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}&offset={}",
+                self.apikey.as_str(),
+                self.query.as_str(),
+                o,
+            ),
+            None => format!(
+                "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}",
+                self.apikey.as_str(),
+                self.query.as_str(),
+            ),
         }
     }
 
@@ -426,7 +426,9 @@ pub enum VTError {
     #[fail(display = "download failed")]
     DownloadFailed(String),
 
-    #[fail(display = "request failed")]
+    #[fail(
+        display = "request failed. Usually, it caused by wrong query. Or it's a Private API if you use public API key."
+    )]
     RequestFailed,
 
     #[fail(display = "already reach to goal")]
