@@ -402,8 +402,21 @@ impl Iterator for Search {
 
 /// scan_id for virustotal
 /// You can use this to get a report at the specific time.
-pub fn scan_id(sample: crate::SampleHash, datetime: chrono::DateTime<Utc>) -> String {
-    format!("{}-{}", sample.as_ref(), datetime.timestamp())
+///
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+///
+/// let client = VirusTotalClient::default();
+///
+/// let sample =  SampleHash::new("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
+/// let sid = scan_id(sample, at!(1, weeks ago));
+///
+/// // let report_at_one_week_ago = client.query_filereport(sid).unwrap();
+/// ```
+pub fn scan_id(sample: crate::SampleHash, datetime: impl Into<chrono::DateTime<Utc>>) -> String {
+    format!("{}-{}", sample.as_ref(), datetime.into().timestamp())
 }
 
 impl Default for VirusTotalClient {
