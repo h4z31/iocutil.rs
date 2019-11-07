@@ -7,6 +7,7 @@ use std::str::FromStr;
 type GenericResult<T> = std::result::Result<T, failure::Error>;
 
 pub mod alienvault;
+pub mod contenthash;
 pub mod datetime;
 pub mod hasher;
 pub mod hashstr;

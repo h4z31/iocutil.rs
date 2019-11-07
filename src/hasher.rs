@@ -1,10 +1,10 @@
-use crate::{GenericResult, SampleHash};
+use crate::contenthash::ContentHash;
+use crate::SampleHash;
 use crypto::digest::Digest;
 use crypto::md5::Md5;
 use crypto::sha1::Sha1;
 use crypto::sha2::Sha256;
 use std::io::{Error, Write};
-use std::path::Path;
 use std::sync::Mutex;
 
 /// Hash calculator
@@ -21,32 +21,6 @@ impl Default for Hasher {
             sha1: Mutex::new(Sha1::new()),
             md5: Mutex::new(Md5::new()),
         }
-    }
-}
-
-#[derive(Eq, PartialEq, Clone, Hash, Debug)]
-pub struct ContentHash {
-    pub sha256: SampleHash,
-    pub sha1: SampleHash,
-    pub md5: SampleHash,
-}
-
-impl ContentHash {
-    /// content hash of file
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use iocutil::prelude::*;
-    ///
-    /// let ch = ContentHash::of_file(r"./Cargo.toml").expect("failed to calc hash");
-    /// println!("{:?}", ch);
-    /// ```
-    pub fn of_file(path: impl AsRef<Path>) -> GenericResult<Self> {
-        let mut f = std::fs::File::open(path)?;
-        let mut hasher = Hasher::default();
-        std::io::copy(&mut f, &mut hasher)?;
-        Ok(hasher.digests())
     }
 }
 
