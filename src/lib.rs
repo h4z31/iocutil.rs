@@ -8,6 +8,7 @@ type GenericResult<T> = std::result::Result<T, failure::Error>;
 
 pub mod alienvault;
 pub mod datetime;
+pub mod hasher;
 pub mod hashstr;
 pub mod prelude;
 pub mod scraper;

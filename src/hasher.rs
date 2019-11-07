@@ -1,0 +1,97 @@
+use crate::{GenericResult, SampleHash};
+use crypto::digest::Digest;
+use crypto::md5::Md5;
+use crypto::sha1::Sha1;
+use crypto::sha2::Sha256;
+use std::io::{Error, Write};
+use std::path::Path;
+use std::sync::Mutex;
+
+/// Hash calculator
+pub struct Hasher {
+    sha256: Mutex<Sha256>,
+    sha1: Mutex<Sha1>,
+    md5: Mutex<Md5>,
+}
+
+impl Default for Hasher {
+    fn default() -> Self {
+        Hasher {
+            sha256: Mutex::new(Sha256::new()),
+            sha1: Mutex::new(Sha1::new()),
+            md5: Mutex::new(Md5::new()),
+        }
+    }
+}
+
+#[derive(Eq, PartialEq, Clone, Hash, Debug)]
+pub struct ContentHash {
+    pub sha256: SampleHash,
+    pub sha1: SampleHash,
+    pub md5: SampleHash,
+}
+
+impl ContentHash {
+    /// content hash of file
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    ///
+    /// let ch = ContentHash::of_file(r"./Cargo.toml").expect("failed to calc hash");
+    /// println!("{:?}", ch);
+    /// ```
+    pub fn of_file(path: impl AsRef<Path>) -> GenericResult<Self> {
+        let mut f = std::fs::File::open(path)?;
+        let mut hasher = Hasher::default();
+        std::io::copy(&mut f, &mut hasher)?;
+        Ok(hasher.digests())
+    }
+}
+
+impl Hasher {
+    /// create new hasher
+    pub fn new() -> Self {
+        Hasher::default()
+    }
+
+    /// get hash digests
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iocutil::prelude::*;
+    ///
+    /// let mut hasher = Hasher::default();
+    /// let mut f = std::fs::File::open("./Cargo.toml").expect("failed to open Cargo.toml");
+    /// std::io::copy(&mut f, &mut hasher).unwrap();
+    /// println!("{:?}", hasher.digests());
+    /// ```
+    pub fn digests(self) -> ContentHash {
+        let mut sha256 = self.sha256.lock().unwrap();
+        let mut sha1 = self.sha1.lock().unwrap();
+        let mut md5 = self.md5.lock().unwrap();
+        ContentHash {
+            sha256: SampleHash::new(sha256.result_str()).unwrap(),
+            sha1: SampleHash::new(sha1.result_str()).unwrap(),
+            md5: SampleHash::new(md5.result_str()).unwrap(),
+        }
+    }
+}
+
+impl Write for Hasher {
+    fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
+        let mut sha256 = self.sha256.lock().unwrap();
+        let mut sha1 = self.sha1.lock().unwrap();
+        let mut md5 = self.md5.lock().unwrap();
+        sha256.input(buf);
+        sha1.input(buf);
+        md5.input(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> Result<(), Error> {
+        Ok(())
+    }
+}
