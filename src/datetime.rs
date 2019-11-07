@@ -84,14 +84,30 @@ macro_rules! at {
 /// ```
 /// use iocutil::prelude::*;
 /// use iocutil::day;
-/// let b = vtdatetime(day!(1992, 01, 17).unwrap());
-/// assert_eq!(b.as_str(), "1992-01-17T00:00:00")
+///
+/// let a = vtdatetime(day!(1992, 01, 17).unwrap());
+/// let b = vtdatetime(day!(1992, 01, 17, start).unwrap());
+/// assert_eq!(a.as_str(), "1992-01-17T00:00:00");
+/// assert_eq!(b.as_str(), "1992-01-17T00:00:00");
+///
+/// let c = vtdatetime(day!(1992, 01, 17, end).unwrap());
+/// assert_eq!(c.as_str(), "1992-01-17T23:59:59");
 /// ```
 #[macro_export]
 macro_rules! day {
     ($y:literal, $m:literal, $d:literal) => {
         chrono::DateTime::parse_from_rfc3339(
             format!("{:04}-{:02}-{:02}T00:00:00.000000-00:00", $y, $m, $d).as_str(),
+        )
+    };
+    ($y:literal, $m:literal, $d:literal, start) => {
+        chrono::DateTime::parse_from_rfc3339(
+            format!("{:04}-{:02}-{:02}T00:00:00.000000-00:00", $y, $m, $d).as_str(),
+        )
+    };
+    ($y:literal, $m:literal, $d:literal, end) => {
+        chrono::DateTime::parse_from_rfc3339(
+            format!("{:04}-{:02}-{:02}T23:59:59.000000-00:00", $y, $m, $d).as_str(),
         )
     };
 }
