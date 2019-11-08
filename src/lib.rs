@@ -17,7 +17,7 @@ mod util;
 pub mod virusbay;
 pub mod virustotal;
 
-/// SampleHash
+/// manage a hash value (sha256/sha1/md5)
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 pub enum SampleHash {
     Sha1(String),
@@ -114,7 +114,7 @@ impl SampleHash {
     /// let hashes = vec![
     ///         "d41d8cd98f00b204e9800998ecf8427e",
     ///         "invalid_hash"
-    ///     ];    
+    ///     ];
     ///
     /// let r1: Result<Vec<_>, _> = SampleHash::map(&hashes);
     ///
@@ -293,6 +293,7 @@ macro_rules! sample {
     };
 }
 
+/// get sample if it is md5
 pub fn sample_md5(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> {
     let hash = unwrap_try_into(hash)?;
     if let SampleHash::Md5(_) = hash {
@@ -302,6 +303,7 @@ pub fn sample_md5(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> {
     }
 }
 
+/// get sample if it is sha1
 pub fn sample_sha1(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> {
     let hash = unwrap_try_into(hash)?;
     if let SampleHash::Sha1(_) = hash {
@@ -311,6 +313,7 @@ pub fn sample_sha1(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> 
     }
 }
 
+/// get sample if it is sha256
 pub fn sample_sha256(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> {
     let hash = unwrap_try_into(hash)?;
     if let SampleHash::Sha256(_) = hash {

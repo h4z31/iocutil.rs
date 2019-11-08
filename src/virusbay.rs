@@ -1,12 +1,16 @@
+//! VirusBay client (exprimental)
+
 use crate::util::unwrap_try_into;
 use crate::{GenericResult, SampleHash};
 use failure::Fail;
 use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
+/// client for VirusBay API
 #[derive(Default)]
 pub struct VirusBayClient;
 
+/// record in response
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Enterprise {
     #[serde(rename = "_id")]
@@ -14,6 +18,7 @@ pub struct Enterprise {
     pub name: String,
 }
 
+/// record in response(experimental)
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Uploader {
     #[serde(rename = "_id")]
@@ -22,6 +27,7 @@ pub struct Uploader {
     pub enterprise: Option<Enterprise>,
 }
 
+/// record in response(experimental)
 #[allow(non_snake_case)]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Tag {
@@ -32,6 +38,7 @@ pub struct Tag {
     pub isHash: bool,
 }
 
+/// record in response(experimental)
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AVRecord {
@@ -39,6 +46,7 @@ pub struct AVRecord {
     pub av: String,
 }
 
+/// record in response(experimental)
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VTReport {
@@ -47,6 +55,7 @@ pub struct VTReport {
     pub avs: Vec<AVRecord>,
 }
 
+/// record in response(experimental)
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SearchResult {
@@ -61,11 +70,13 @@ pub struct SearchResult {
     pub publishDate: String,
 }
 
+/// Response from VirusBay API
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Response {
     pub search: Vec<SearchResult>,
 }
 
+/// Errors in operating VirusBay
 #[derive(Fail, Debug)]
 pub enum VirusBayError {
     #[fail(display = "sample not found on VirusBay")]
@@ -93,7 +104,7 @@ impl VirusBayClient {
         Ok(reqwest::get(self.query_url(unwrap_try_into(hash)?).as_str())?.text()?)
     }
 
-    /// query with free format
+    /// query a sample (free format)
     ///
     /// # Example
     ///
@@ -112,7 +123,7 @@ impl VirusBayClient {
         Ok(reqwest::get(self.query_url(unwrap_try_into(hash)?).as_str())?.json()?)
     }
 
-    /// formatted query
+    /// query a sample (formatted)
     /// there are no guarantee for correctness of format.
     /// (I could not find any documents about this.)
     ///
