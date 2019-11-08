@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ScrapingError",""]],"fn":[["get_article","get article (or body) text from specified url"],["get_html","get html from specified url"],["scrape_articles","scrape articles from html text"],["scrape_body","scrape body from html text"]]});
