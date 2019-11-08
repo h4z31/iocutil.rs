@@ -89,6 +89,8 @@ println!("example.com => {:?}", c);
 #### scrape from url
 
 ```rust
+// get content from url and extract hashes.
+// this targets only text in article elements (or body if not found)
 let hashes: Vec<_> = SampleHash::scrape(
     "https://www.malware-traffic-analysis.net/2019/05/20/index.html"
     ).unwrap();
@@ -97,9 +99,6 @@ hashes
     .into_iter()
     .for_each(|x| println!("{}", x));
 ```
-
-* SampleHash::scrape targets only text in article elements (or body if not found)
-    * less noise
 
 ### API Clients
 
@@ -118,10 +117,9 @@ let samples: Vec<_> = client.search(
 
 samples.into_iter().for_each(|x| println!("{}", x));
 
-// or
-
+// retrieve a file report
 let report = client
-    .query_filereport(samples.first().unwrap())
+    .query_filereport(sample!("d41d8cd98f00b204e9800998ecf8427e"))
     .unwrap();
 ```
 other features:
@@ -136,8 +134,10 @@ other features:
 // read apikey from environment variable `$OTX_APIKEY`
 let client = AlienVaultOTXClient::default();
 
+// get pulses modified in recent one week
 let pulses: Vec<Pulse> = client.pulses_from(at!(1, weeks ago)).unwrap();
 
+// extract hashes from each pulse
 pulses
     .into_iter()
     .inspect(|x| println!("\n# {}\n", x.name))
