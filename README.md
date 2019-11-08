@@ -52,12 +52,14 @@ let client = VirusTotalClient::default();
 
 // search new samples for recent one week(limit 300 samples)
 // this requires private API. It consume a request per 300 hashes.
-let samples: Vec<_> client.search(
+let samples: Vec<_> = client.search(
         fs!(at!(1, days ago) =>),
         Some(300)
     ).unwrap();
 
 samples.into_iter().for_each(|x| println!("{}", x));
+
+// or
 
 let report = client
     .query_filereport(samples.first().unwrap())
@@ -84,6 +86,7 @@ pulses
     .flat_map(|x: Vec<SampleHash>| x)
     .for_each(|x: SampleHash| println!("* {}", x))
 ```
+other features:
 
 * query a hash indicator 
 
