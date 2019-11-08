@@ -3,6 +3,12 @@ authors = ["Hiromitsu Oshiba <0x75960@chocola.tech>"]
 edition = "2018"
 name = "iocutil"
 version = "0.1.0"
+license-file = "LICENSE"
+description = """
+IoC utilities for malware researchers
+"""
+repository = "https://github.com/0x75960/iocutil.rs"
+readme = "README.md"
 
 [dependencies]
 chrono = "0.4.9"
