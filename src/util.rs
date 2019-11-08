@@ -9,24 +9,12 @@ pub fn unwrap_try_into(hash: impl TryInto<SampleHash>) -> Result<SampleHash, Err
 #[macro_export]
 macro_rules! check_hashtype {
     ($hash:expr => md5) => {
-        if let $crate::SampleHash::Md5(_) = $hash {
-            Ok($hash)
-        } else {
-            Err(std::io::Error::from(std::io::ErrorKind::InvalidInput))
-        }
+        $crate::sample_md5($hash)
     };
     ($hash:expr => sha1) => {
-        if let $crate::SampleHash::Sha1(_) = $hash {
-            Ok($hash)
-        } else {
-            Err(std::io::Error::from(std::io::ErrorKind::InvalidInput))
-        }
+        $crate::sample_sha1($hash)
     };
     ($hash:expr => sha256) => {
-        if let $crate::SampleHash::Sha256(_) = $hash {
-            Ok($hash)
-        } else {
-            Err(std::io::Error::from(std::io::ErrorKind::InvalidInput))
-        }
+        $crate::sample_sha256($hash)
     };
 }

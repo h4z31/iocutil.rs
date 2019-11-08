@@ -1,5 +1,6 @@
-use crate::hasher::Hasher;
 use crate::check_hashtype;
+use crate::hasher::Hasher;
+use crate::sample;
 use crate::util::unwrap_try_into;
 use crate::GenericResult;
 use crate::SampleHash;
@@ -28,11 +29,9 @@ impl Default for ContentHash {
     /// ```
     fn default() -> Self {
         ContentHash {
-            sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-                .parse()
-                .unwrap(),
-            sha1: "da39a3ee5e6b4b0d3255bfef95601890afd80709".parse().unwrap(),
-            md5: "d41d8cd98f00b204e9800998ecf8427e".parse().unwrap(),
+            sha256: sample!("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" => sha256),
+            sha1: sample!("da39a3ee5e6b4b0d3255bfef95601890afd80709" => sha1),
+            md5: sample!("d41d8cd98f00b204e9800998ecf8427e" => md5),
         }
     }
 }
@@ -66,13 +65,10 @@ impl ContentHash {
         sha1: impl TryInto<SampleHash>,
         md5: impl TryInto<SampleHash>,
     ) -> GenericResult<Self> {
-        let s256 = unwrap_try_into(sha256)?;
-        let s1 = unwrap_try_into(sha1)?;
-        let md5 = unwrap_try_into(md5)?;
         Ok(ContentHash {
-            sha256: check_hashtype!(s256 => sha256)?,
-            sha1: check_hashtype!(s1 => sha1)?,
-            md5: check_hashtype!(md5 => md5)?,
+            sha256: check_hashtype!(unwrap_try_into(sha256)? => sha256)?,
+            sha1: check_hashtype!(unwrap_try_into(sha1)? => sha1)?,
+            md5: check_hashtype!(unwrap_try_into(md5)? => md5)?,
         })
     }
 

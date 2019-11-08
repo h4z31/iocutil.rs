@@ -283,16 +283,41 @@ macro_rules! sample {
         $crate::SampleHash::new($hash).unwrap()
     };
     ($hash:literal => sha256) => {
-        $crate::check_hashtype!($crate::sample!($hash) => sha256).unwrap()
+        $crate::sample_sha256($hash).unwrap()
     };
     ($hash:literal => sha1) => {
-        $crate::check_hashtype!($crate::sample!($hash) => sha1).unwrap()
+        $crate::sample_sha1($hash).unwrap()
     };
     ($hash:literal => md5) => {
-        $crate::check_hashtype!($crate::sample!($hash) => sha1).unwrap()
+        $crate::sample_md5($hash).unwrap()
     };
+}
 
+pub fn sample_md5(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> {
+    let hash = unwrap_try_into(hash)?;
+    if let SampleHash::Md5(_) = hash {
+        Ok(hash)
+    } else {
+        Err(std::io::Error::from(std::io::ErrorKind::InvalidInput).into())
+    }
+}
 
+pub fn sample_sha1(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> {
+    let hash = unwrap_try_into(hash)?;
+    if let SampleHash::Sha1(_) = hash {
+        Ok(hash)
+    } else {
+        Err(std::io::Error::from(std::io::ErrorKind::InvalidInput).into())
+    }
+}
+
+pub fn sample_sha256(hash: impl TryInto<SampleHash>) -> GenericResult<SampleHash> {
+    let hash = unwrap_try_into(hash)?;
+    if let SampleHash::Sha256(_) = hash {
+        Ok(hash)
+    } else {
+        Err(std::io::Error::from(std::io::ErrorKind::InvalidInput).into())
+    }
 }
 
 #[cfg(test)]
