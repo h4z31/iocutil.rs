@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Hasher","Hash calculator"]]});
