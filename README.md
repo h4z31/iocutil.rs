@@ -98,6 +98,9 @@ hashes
     .for_each(|x| println!("{}", x));
 ```
 
+* SampleHash::scrape targets only text in article elements (or body if not found)
+    * less noise
+
 ### API Clients
 
 #### VirusTotal
