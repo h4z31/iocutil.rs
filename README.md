@@ -16,7 +16,7 @@ and import in your Rust code
 use iocutil::prelude::*;
 ```
 
-## what does it do?
+## how it helps you?
 
 ### hash
 
