@@ -99,4 +99,4 @@ other features:
 
 ## Author
 
-* Hiromitsu Oshiba <0x75960@strelka.cc>
+* 0x75960 <0x75960@strelka.cc>
