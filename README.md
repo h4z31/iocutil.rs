@@ -86,7 +86,7 @@ let c: ContentHash = hasher.digests();
 println!("example.com => {:?}", c);
 ```
 
-#### scrape remote url
+#### scrape from url
 
 ```rust
 let hashes: Vec<_> = SampleHash::scrape(
