@@ -151,7 +151,7 @@ impl SampleHash {
     ///
     /// let r1: HashSet<_> = SampleHash::try_map(hashes1).expect("failed to map");
     /// assert_eq!(r1.len(), 1);
-    /// assert!(r1.contains(&SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").unwrap()));
+    /// assert!(r1.contains(&sample!("d41d8cd98f00b204e9800998ecf8427e")));
     ///
     /// let hashes2 = vec![
     ///     "d41d8cd98f00b204e9800998ecf8427e",
@@ -193,9 +193,9 @@ impl SampleHash {
     ///
     /// let uniqued: Vec<_> = SampleHash::uniquify(twice);
     /// assert_eq!(uniqued.len(), 3);
-    /// assert!(uniqued.contains(&SampleHash::new("d41d8cd98f00b204e9800998ecf8427e").unwrap()));
-    /// assert!(uniqued.contains(&SampleHash::new("da39a3ee5e6b4b0d3255bfef95601890afd80709").unwrap()));
-    /// assert!(uniqued.contains(&SampleHash::new("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap()));
+    /// assert!(uniqued.contains(&sample!("d41d8cd98f00b204e9800998ecf8427e")));
+    /// assert!(uniqued.contains(&sample!("da39a3ee5e6b4b0d3255bfef95601890afd80709")));
+    /// assert!(uniqued.contains(&sample!("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")));
     /// ```
     ///
     pub fn uniquify<T>(hashes: impl IntoIterator<Item = impl TryInto<SampleHash>>) -> T
@@ -243,8 +243,8 @@ impl SampleHash {
     ///
     /// let hashes: std::collections::HashSet<_> = SampleHash::scrape("https://www.malware-traffic-analysis.net/2019/05/20/index.html").expect("failed to scrape https://www.malware-traffic-analysis.net/2019/05/20/index.html");
     /// assert_eq!(hashes.len(), 2);
-    /// assert!(hashes.contains(&SampleHash::new("7f335f990851510ab9654e9fc1add2acec2c38a64563b711031769c58ecd45c0").unwrap()));
-    /// assert!(hashes.contains(&SampleHash::new("5a7042e698ce8e5cf6c4615e41a4205a52d9bb18a6ff214a967724c866cb72b4").unwrap()));
+    /// assert!(hashes.contains(&sample!("7f335f990851510ab9654e9fc1add2acec2c38a64563b711031769c58ecd45c0")));
+    /// assert!(hashes.contains(&sample!("5a7042e698ce8e5cf6c4615e41a4205a52d9bb18a6ff214a967724c866cb72b4")));
     /// ```
     pub fn scrape<T>(url: impl AsRef<str>) -> GenericResult<T>
     where
@@ -252,6 +252,47 @@ impl SampleHash {
     {
         Ok(SampleHash::find(scraper::get_article(url)?))
     }
+}
+
+/// # Example
+///
+/// ```
+/// use iocutil::prelude::*;
+/// let s1 = sample!("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+/// assert_eq!(s1, SampleHash::Sha256("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string()));
+///
+/// // with hash type check
+/// let s2 = sample!("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" => sha256);
+/// assert_eq!(s1, s2);
+/// ```
+///
+/// ```should_panic
+/// use iocutil::prelude::*;
+/// // panic if it is not hash
+/// sample!("a");
+/// ```
+///
+/// ```should_panic
+/// use iocutil::prelude::*;
+/// // panic if hash type does not match
+/// let s3 = sample!("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" => md5); // panic
+/// ```
+#[macro_export]
+macro_rules! sample {
+    ($hash:literal) => {
+        $crate::SampleHash::new($hash).unwrap()
+    };
+    ($hash:literal => sha256) => {
+        $crate::check_hashtype!($crate::sample!($hash) => sha256).unwrap()
+    };
+    ($hash:literal => sha1) => {
+        $crate::check_hashtype!($crate::sample!($hash) => sha1).unwrap()
+    };
+    ($hash:literal => md5) => {
+        $crate::check_hashtype!($crate::sample!($hash) => sha1).unwrap()
+    };
+
+
 }
 
 #[cfg(test)]

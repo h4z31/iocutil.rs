@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::convert::TryInto;
 
+use crate::contenthash::ContentHash;
 use crate::util::unwrap_try_into;
 use crate::{GenericResult, SampleHash};
 
@@ -519,6 +520,16 @@ pub struct FileReport {
     pub positives: u32,
     pub total: u32,
     pub scans: HashMap<String, ScanResult>,
+}
+
+impl Into<ContentHash> for FileReport {
+    fn into(self) -> ContentHash {
+        ContentHash {
+            sha256: SampleHash::new(self.sha256).unwrap(),
+            sha1: SampleHash::new(self.sha1).unwrap(),
+            md5: SampleHash::new(self.md5).unwrap(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
