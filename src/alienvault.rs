@@ -1,3 +1,5 @@
+//! AlienVault OTX client and its utilities
+
 use crate::util::unwrap_try_into;
 use chrono::prelude::*;
 use derive_builder::Builder;
@@ -9,7 +11,7 @@ use std::convert::TryInto;
 use crate::datetime::days_ago;
 use crate::{GenericResult, SampleHash};
 
-/// AlienVaultOTX API Client
+/// AlienVaultOTX API Client (default use `$OTX_APIKEY` environment variable as apikey)
 pub struct AlienVaultOTXClient {
     apikey: String,
 }
@@ -23,6 +25,7 @@ impl Default for AlienVaultOTXClient {
     }
 }
 
+/// Errors in operating AlienVault OTX
 #[derive(Debug, Fail)]
 pub enum AlienVaultOTXError {
     #[fail(display = "invalid setting")]
@@ -32,6 +35,7 @@ pub enum AlienVaultOTXError {
     RequestFailed,
 }
 
+/// QueryType when query about a indicator
 #[derive(Debug)]
 pub enum QueryType {
     General,
@@ -166,6 +170,7 @@ impl AlienVaultOTXClient {
     }
 }
 
+/// request context object for pulses subscribed api
 #[derive(Builder, Debug)]
 pub struct Pulses {
     #[builder(
@@ -213,8 +218,7 @@ pub enum IndicatorType {
     Unknown,
 }
 
-/// ref. https://github.com/AlienVault-OTX/OTX-Go-SDK/blob/master/src/otxapi/pulses.go#L19
-
+/// a indicator in pulse
 #[derive(Debug, Deserialize)]
 pub struct Indicator {
     pub id: i64,
@@ -224,7 +228,7 @@ pub struct Indicator {
     pub _type: IndicatorType,
 }
 
-/// ref. https://github.com/AlienVault-OTX/OTX-Go-SDK/blob/master/src/otxapi/pulses.go#L10
+/// a pulse
 #[derive(Debug, Deserialize)]
 pub struct Pulse {
     pub id: String,
@@ -249,6 +253,13 @@ impl Into<Vec<SampleHash>> for Pulse {
             .map(|x| SampleHash::new(x.indicator))
             .flat_map(|x| x)
             .collect()
+    }
+}
+
+impl Pulse {
+    /// get webpage url of pulse
+    pub fn get_url(&self) -> String {
+        format!("https://otx.alienvault.com/pulse/{}", self.id)
     }
 }
 

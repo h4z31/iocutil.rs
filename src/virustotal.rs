@@ -1,3 +1,5 @@
+//! VirusTotal client and its utilities
+
 use chrono::Utc;
 use failure::Fail;
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
@@ -9,6 +11,7 @@ use crate::contenthash::ContentHash;
 use crate::util::unwrap_try_into;
 use crate::{GenericResult, SampleHash};
 
+/// client for VirusTotal API (default use `$VTAPIKEY` environment variable as apikey)
 pub struct VirusTotalClient {
     apikey: String,
 }
@@ -149,6 +152,16 @@ impl VirusTotalClient {
     }
 
     /// query file report (without allinfo)
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use iocutil::prelude::*;
+    ///
+    /// let client = VirusTotalClient::default();
+    ///
+    /// let report = client.query_filereport("d41d8cd98f00b204e9800998ecf8427e").unwrap();
+    /// ```
     pub fn query_filereport(
         &self,
         resource: impl AsRef<str>,
@@ -311,6 +324,7 @@ impl VirusTotalClient {
     }
 }
 
+/// context object for search api
 pub struct Search {
     apikey: String,
     query: String,
@@ -353,7 +367,7 @@ impl Search {
         }
     }
 
-    /// do search once (most 300 samples per a page)
+    /// request once (most 300 samples per a page)
     pub fn do_search<T>(&mut self) -> GenericResult<T>
     where
         T: std::iter::FromIterator<SampleHash>,
@@ -429,6 +443,7 @@ impl Default for VirusTotalClient {
     }
 }
 
+/// Errors in VirusTotal operation
 #[derive(Fail, Debug)]
 pub enum VTError {
     #[fail(display = "VT not returned status code 1")]
@@ -539,7 +554,7 @@ pub struct SearchResponse {
     hashes: Option<Vec<String>>,
 }
 
-/// macro provides easy way to make format for query first submission
+/// first submission search modifier macro
 ///
 /// # Example
 ///
@@ -576,7 +591,7 @@ macro_rules! fs {
     };
 }
 
-/// macro provides easy way to make format for query last submission
+/// last submission search modifier macro
 ///
 /// # Example
 ///
@@ -613,7 +628,7 @@ macro_rules! ls {
     };
 }
 
-/// macro provides easy way to make format for query last analysis
+/// last analysis search modifier macro
 ///
 /// # Example
 ///
@@ -651,7 +666,7 @@ macro_rules! la {
     };
 }
 
-/// macro provides easy way to make format for query positive numbers
+/// positive numbers search modifier macro
 ///
 /// # Example
 ///

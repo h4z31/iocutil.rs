@@ -1,6 +1,9 @@
+//! datetime utilities
+
 use chrono::{DateTime, Utc};
 use time::Duration;
 
+/// get datetime n days ago
 pub fn days_ago(n: i64) -> DateTime<Utc> {
     Utc::now() - Duration::days(n)
 }
@@ -10,7 +13,7 @@ pub fn after(base: impl Into<DateTime<Utc>>, after: Duration) -> DateTime<Utc> {
     base.into() + after
 }
 
-/// macro provides datetime at
+/// macro datetime at specified condition
 ///
 /// # Example
 ///
@@ -77,7 +80,7 @@ macro_rules! at {
     };
 }
 
-/// macro provide day
+/// macro datetime at specified day
 ///
 /// # Example
 ///
@@ -112,7 +115,7 @@ macro_rules! day {
     };
 }
 
-/// virustotal query format
+/// get datetime as virustotal query format
 ///
 /// # Example
 ///

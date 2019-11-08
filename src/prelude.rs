@@ -1,3 +1,5 @@
+//! The prelude of ioutil.rs
+
 pub use crate::alienvault::{hashes_in, AlienVaultOTXClient, Pulse, QueryType};
 pub use crate::contenthash::{remove_overlap, ContentHash};
 pub use crate::datetime::{days_ago, vtdatetime};

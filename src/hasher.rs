@@ -1,3 +1,5 @@
+//! calculating hashes (sha256 / sha1 / md5)
+
 use crate::contenthash::ContentHash;
 use crate::SampleHash;
 use crypto::digest::Digest;

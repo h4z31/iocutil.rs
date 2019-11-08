@@ -1,3 +1,5 @@
+//! utilities for hash string operation
+
 use std::collections::HashSet;
 
 use lazy_static::lazy_static;
@@ -16,6 +18,7 @@ lazy_static! {
     .unwrap();
 }
 
+/// kind of hash
 #[derive(Debug, Eq, PartialEq)]
 pub enum HashType {
     Unknown,

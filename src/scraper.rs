@@ -1,3 +1,5 @@
+//! utilities for scraping web pages
+
 use crate::GenericResult;
 use failure::Fail;
 use lazy_static::lazy_static;
@@ -31,6 +33,7 @@ pub fn scrape_body(html: impl AsRef<str>) -> Vec<String> {
         .collect()
 }
 
+/// Errors in scraping
 #[derive(Fail, Debug)]
 pub enum ScrapingError {
     #[fail(display = "could not find target elements")]

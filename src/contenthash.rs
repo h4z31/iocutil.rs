@@ -1,3 +1,5 @@
+//! hash (sha256 / sha1 / md5) bundle and its utilities
+
 use crate::check_hashtype;
 use crate::hasher::Hasher;
 use crate::sample;
@@ -8,6 +10,7 @@ use std::collections::HashSet;
 use std::convert::TryInto;
 use std::path::Path;
 
+/// hash bundle for a content
 #[derive(Eq, PartialEq, Clone, Hash, Debug)]
 pub struct ContentHash {
     pub sha256: SampleHash,
