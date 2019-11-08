@@ -4,13 +4,11 @@ IoC utilities for malware researchers
 
 ## usage
 
-add trailing config into your `Cargo.toml`
+add trailing config into `[dependencies]` your `Cargo.toml`
 
 ```toml
-iocutil = {version="0.1", git="https://github.com/0x75960/iocutil.rs"}
+iocutil="0.1.0"
 ```
-
-* I will publish this to crate.io later.
 
 and import in your Rust code
 
