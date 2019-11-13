@@ -67,10 +67,10 @@ impl AlienVaultOTXClient {
     /// let client = AlienVaultOTXClient::default();
     /// let pulses = client.pulses_from(days_ago(7));
     /// ```
-    pub fn pulses_from(&self, datetime: DateTime<Utc>) -> GenericResult<Vec<Pulse>> {
+    pub fn pulses_from(&self, datetime: impl Into<DateTime<Utc>>) -> GenericResult<Vec<Pulse>> {
         Ok(PulsesBuilder::default()
             .api_key(self.apikey.clone())
-            .modified_since(datetime)
+            .modified_since(datetime.into())
             .build()
             .map_err(AlienVaultOTXError::InvalidSetting)?
             .get_all())
