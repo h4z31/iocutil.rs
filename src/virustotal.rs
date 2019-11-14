@@ -420,7 +420,7 @@ impl Iterator for Search {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// use iocutil::prelude::*;
 ///
 /// let client = VirusTotalClient::default();
